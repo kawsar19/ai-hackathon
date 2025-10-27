@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum IdeaStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  phone       String?
+  department  String?
+  employeeId  String?
+  position    String?
+  location    String?
+  bio         String?
+  skills      String[]
+  avatar      String?
+  role        UserRole @default(USER)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  ideas       Idea[]
+  sessions    Session[]
+
+  @@map("users")
+}
+
+model Idea {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  description     String
+  category        String
+  problemStatement String
+  solution        String
+  targetAudience  String?
+  techStack       String[]
+  expectedOutcome String?
+  timeline        String?
+  resources       String?
+  attachments     String[]
+  status          IdeaStatus @default(PENDING)
+  progress        Int        @default(0)
+  score           Float?
+  feedback        String?
+  githubUrl       String?
+  demoUrl         String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  userId          String     @db.ObjectId
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ideas")
+}
+
+model Session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  userId    String   @db.ObjectId
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  type      String   // success, info, warning, error
+  isRead    Boolean  @default(false)
+  userId    String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
