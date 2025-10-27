@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
@@ -14,7 +14,7 @@ import {
   CheckCircle,
 } from "lucide-react"
 
-export default function LoginPage() {
+function LoginForm() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -215,5 +215,25 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="text-center">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-300 rounded mb-4"></div>
+              <div className="h-6 bg-gray-300 rounded mb-2"></div>
+              <div className="h-4 bg-gray-300 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
