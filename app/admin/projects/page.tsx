@@ -311,6 +311,38 @@ export default function ProjectsPage() {
         </div>
       </div>
 
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+          <div className="text-2xl font-bold text-gray-900">{ideas.length}</div>
+          <div className="text-sm text-gray-600">Total Projects</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+          <div className="text-2xl font-bold text-yellow-600">
+            {ideas.filter(p => p.status === "PENDING").length}
+          </div>
+          <div className="text-sm text-gray-600">Pending Review</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+          <div className="text-2xl font-bold text-green-600">
+            {ideas.filter(p => p.status === "APPROVED").length}
+          </div>
+          <div className="text-sm text-gray-600">Approved</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+          <div className="text-2xl font-bold text-blue-600">
+            {ideas.filter(p => p.status === "IN_PROGRESS").length}
+          </div>
+          <div className="text-sm text-gray-600">In Progress</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+          <div className="text-2xl font-bold text-purple-600">
+            {ideas.filter(p => p.status === "COMPLETED").length}
+          </div>
+          <div className="text-sm text-gray-600">Completed</div>
+        </div>
+      </div>
+
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredProjects.map((project) => (
@@ -431,37 +463,7 @@ export default function ProjectsPage() {
         ))}
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">{ideas.length}</div>
-          <div className="text-sm text-gray-600">Total Projects</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-yellow-600">
-            {ideas.filter(p => p.status === "PENDING").length}
-          </div>
-          <div className="text-sm text-gray-600">Pending Review</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-green-600">
-            {ideas.filter(p => p.status === "APPROVED").length}
-          </div>
-          <div className="text-sm text-gray-600">Approved</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-blue-600">
-            {ideas.filter(p => p.status === "IN_PROGRESS").length}
-          </div>
-          <div className="text-sm text-gray-600">In Progress</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-2xl font-bold text-purple-600">
-            {ideas.filter(p => p.status === "COMPLETED").length}
-          </div>
-          <div className="text-sm text-gray-600">Completed</div>
-        </div>
-      </div>
+    
 
       {/* View Modal */}
       {isViewModalOpen && selectedProject && (

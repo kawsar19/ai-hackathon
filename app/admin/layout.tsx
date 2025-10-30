@@ -7,6 +7,8 @@ import {
   LayoutDashboard,
   Users,
   FileText,
+  Award,
+  Settings as SettingsIcon,
   Bell,
   Search,
   Menu,
@@ -31,6 +33,8 @@ const navigation = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Participants", href: "/admin/participants", icon: Users },
   { name: "Projects", href: "/admin/projects", icon: FileText },
+  { name: "Marks", href: "/admin/marks", icon: Award },
+  { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
 ]
 
 export default function AdminLayout({

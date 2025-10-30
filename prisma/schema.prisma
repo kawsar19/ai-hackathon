@@ -45,6 +45,7 @@ model User {
   // Relations
   ideas       Idea[]
   sessions    Session[]
+  scoresGiven IdeaScore[] @relation("AdminScores")
 
   @@map("users")
 }
@@ -74,6 +75,7 @@ model Idea {
   // Relations
   userId          String     @db.ObjectId
   user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scores          IdeaScore[]
 
   @@map("ideas")
 }
@@ -101,4 +103,36 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@map("notifications")
+}
+
+// Per-admin scoring for ideas (projects)
+model IdeaScore {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  ideaId    String   @db.ObjectId
+  adminId   String   @db.ObjectId
+  // Category scores (each 0 - 10, total out of 100)
+  innovation        Int @default(0)
+  aiIntegration     Int @default(0)
+  designUx          Int @default(0)
+  problemSolving    Int @default(0)
+  codeQuality       Int @default(0)
+  performance       Int @default(0)
+  scalability       Int @default(0)
+  documentation     Int @default(0)
+  presentation      Int @default(0)
+  completeness      Int @default(0)
+  // Optional cached total
+  score             Int?
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  idea  Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  admin User @relation("AdminScores", fields: [adminId], references: [id], onDelete: Cascade)
+
+  // Ensure one score per (idea, admin)
+  @@unique([ideaId, adminId])
+
+  @@map("idea_scores")
 }
