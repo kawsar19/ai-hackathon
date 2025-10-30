@@ -496,13 +496,15 @@ export default function MyIdeasPage() {
                       <Save className="h-4 w-4" />
                     </button>
                   )}
-                  <button 
-                    onClick={() => window.location.href = `/dashboard/edit-idea/${idea.id}`}
-                    className="p-2 text-gray-400 hover:text-blue-600"
-                    title="Edit Idea"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
+                  {idea.status === "PENDING" && (
+                    <button 
+                      onClick={() => window.location.href = `/dashboard/edit-idea/${idea.id}`}
+                      className="p-2 text-gray-400 hover:text-blue-600"
+                      title="Edit Idea"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  )}
                   <button 
                     onClick={() => setViewingIdea(idea)}
                     className="p-2 text-gray-400 hover:text-gray-600"

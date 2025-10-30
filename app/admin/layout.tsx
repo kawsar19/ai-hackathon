@@ -31,10 +31,13 @@ import {
 const navigation = [
   { name: "Home", href: "/", icon: Home },
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { name: "Participants", href: "/admin/participants", icon: Users },
+  { name: "Users & Admins", href: "/admin/participants", icon: Users },
   { name: "Projects", href: "/admin/projects", icon: FileText },
   { name: "Marks", href: "/admin/marks", icon: Award },
   { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
+  { name: "Submitted Ideas", href: "/admin/submitted", icon: FileText },
+  { name: "Approved Projects", href: "/admin/approved", icon: Award },
+  { name: "Ongoing Projects", href: "/admin/ongoing", icon: Award },
 ]
 
 export default function AdminLayout({
