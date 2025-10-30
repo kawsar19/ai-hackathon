@@ -8,8 +8,8 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/', '/login', '/register']
-  const isPublicRoute = publicRoutes.includes(pathname)
+  const publicRoutes = ['/', '/login', '/register', '/forgot-password']
+  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/reset-password/')
 
   // Admin routes
   const isAdminRoute = pathname.startsWith('/admin')
