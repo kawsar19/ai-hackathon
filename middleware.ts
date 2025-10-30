@@ -47,9 +47,9 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
-    if (isUserRoute && userRole !== 'USER' && userRole !== 'ADMIN') {
-      // Redirect users without proper role
-      return NextResponse.redirect(new URL('/login', request.url))
+    if (isUserRoute && userRole !== 'USER') {
+      // Only regular users can access /dashboard; redirect admins to admin dashboard
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url))
     }
 
     // Allow access
