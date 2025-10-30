@@ -72,28 +72,136 @@ const categories = [
   "Others",
 ]
 
-const techStackOptions = [
-  "Python",
-  "JavaScript",
-  "React",
-  "Node.js",
-  "Vue.js",
-  "Angular",
-  "Express",
-  "Django",
-  "Flask",
-  "FastAPI",
-  "TensorFlow",
-  "PyTorch",
-  "OpenAI API",
-  "MongoDB",
-  "PostgreSQL",
-  "Redis",
-  "Docker",
-  "AWS",
-  "Azure",
-  "Google Cloud",
-]
+const techStackOptions: Record<string, string[]> = {
+  "Frontend": [
+    "React",
+    "Vue.js",
+    "Angular",
+    "Next.js",
+    "Nuxt.js",
+    "Svelte",
+    "TypeScript",
+    "JavaScript",
+    "HTML5",
+    "CSS3",
+    "Tailwind CSS",
+    "Bootstrap",
+    "Material-UI",
+    "Chakra UI",
+    "Ant Design",
+    "Redux",
+    "Zustand",
+    "GraphQL",
+    "Apollo Client",
+    "Webpack",
+    "Vite",
+    "Parcel",
+  ],
+  "Backend": [
+    "Node.js",
+    "Express",
+    "Fastify",
+    "Python",
+    "Django",
+    "Flask",
+    "FastAPI",
+    "Java",
+    "Spring Boot",
+    "C#",
+    ".NET",
+    "ASP.NET Core",
+    "Go",
+    "Gin",
+    "Echo",
+    "PHP",
+    "Laravel",
+    "Symfony",
+    "Ruby",
+    "Ruby on Rails",
+    "Rust",
+    "Actix",
+    "Rocket",
+  ],
+  "Database": [
+    "MongoDB",
+    "PostgreSQL",
+    "MySQL",
+    "SQLite",
+    "Redis",
+    "Elasticsearch",
+    "Cassandra",
+    "DynamoDB",
+    "Firebase",
+    "Supabase",
+    "Prisma",
+    "Sequelize",
+    "TypeORM",
+    "Mongoose",
+  ],
+  "AI/ML": [
+    "TensorFlow",
+    "PyTorch",
+    "Scikit-learn",
+    "OpenAI API",
+    "Hugging Face",
+    "LangChain",
+    "Pandas",
+    "NumPy",
+    "Keras",
+    "OpenCV",
+    "NLTK",
+    "spaCy",
+    "Transformers",
+    "Jupyter",
+    "MLflow",
+  ],
+  "DevOps & Cloud": [
+    "Docker",
+    "Kubernetes",
+    "AWS",
+    "Azure",
+    "Google Cloud",
+    "Vercel",
+    "Netlify",
+    "Heroku",
+    "DigitalOcean",
+    "Linode",
+    "Terraform",
+    "Ansible",
+    "Jenkins",
+    "GitHub Actions",
+    "GitLab CI",
+    "Nginx",
+    "Apache",
+  ],
+  "Mobile": [
+    "React Native",
+    "Flutter",
+    "Ionic",
+    "Xamarin",
+    "Swift",
+    "Kotlin",
+    "Java (Android)",
+    "Objective-C",
+    "Expo",
+    "Cordova",
+    "PhoneGap",
+  ],
+  "Other": [
+    "WebRTC",
+    "Socket.io",
+    "WebSockets",
+    "REST API",
+    "GraphQL",
+    "Microservices",
+    "Serverless",
+    "Blockchain",
+    "Web3",
+    "Ethereum",
+    "Solidity",
+    "IPFS",
+  ],
+}
 
 export default function EditIdeaPage() {
   const params = useParams()
@@ -515,17 +623,27 @@ export default function EditIdeaPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Technology Stack *
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {techStackOptions.map((tech) => (
-                  <label key={tech} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.techStack.includes(tech)}
-                      onChange={() => handleTechStackToggle(tech)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm text-gray-700">{tech}</span>
-                  </label>
+              <div className="space-y-4">
+                {Object.entries(techStackOptions).map(([category, technologies]) => (
+                  <div key={category} className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                      {category}
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {technologies.map((tech) => (
+                        <label key={tech} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={formData.techStack.includes(tech)}
+                            onChange={() => handleTechStackToggle(tech)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{tech}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
               {errors.techStack && (

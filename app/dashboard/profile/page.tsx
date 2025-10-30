@@ -49,6 +49,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [errors, setErrors] = useState({})
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   // Fetch user profile on component mount
   useEffect(() => {
@@ -123,6 +124,7 @@ export default function ProfilePage() {
     }
 
     try {
+      setUploadingAvatar(true)
       const avatarUrl = await uploadToCloudinary(file)
       setProfileData(prev => ({ ...prev, avatar: avatarUrl }))
       
@@ -133,6 +135,8 @@ export default function ProfilePage() {
     } catch (error) {
       console.error('Error uploading avatar:', error)
       setErrors({ avatar: 'Failed to upload avatar' })
+    } finally {
+      setUploadingAvatar(false)
     }
   }
 
@@ -199,6 +203,9 @@ export default function ProfilePage() {
         skills: data.user.skills,
         avatar: data.user.avatar,
       }))
+      
+      // Notify other parts of the app (e.g., header) immediately
+      window.dispatchEvent(new CustomEvent('profile-updated', { detail: { user: data.user } }))
       
       // Hide success message after 3 seconds
       setTimeout(() => setSaveSuccess(false), 3000)
@@ -298,13 +305,21 @@ export default function ProfilePage() {
                     <User className="h-12 w-12 text-white" />
                   </div>
                 )}
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center mx-auto mb-4">
+                    <div className="h-24 w-24 rounded-full bg-white/60 flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                    </div>
+                  </div>
+                )}
                 {isEditing && (
-                  <label className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-700">
+                  <label className={`absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 ${uploadingAvatar ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-700'}`}>
                     <Camera className="h-4 w-4" />
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleAvatarUpload}
+                      disabled={uploadingAvatar}
                       className="hidden"
                     />
                   </label>

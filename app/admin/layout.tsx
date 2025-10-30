@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -17,6 +17,14 @@ import {
   Home,
 } from "lucide-react"
 import { logout } from '@/lib/logout'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu'
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
@@ -32,6 +40,22 @@ export default function AdminLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const [profile, setProfile] = useState<{ firstName?: string; lastName?: string; email?: string; avatar?: string } | null>(null)
+  const [notifCount, setNotifCount] = useState<number>(0)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('/api/auth/profile', { credentials: 'include' })
+        if (!res.ok) return
+        const data = await res.json()
+        setProfile(data.user)
+      } catch (_) {
+        // ignore
+      }
+    }
+    fetchProfile()
+  }, [])
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -157,28 +181,45 @@ export default function AdminLayout({
             </h1>
 
             <div className="flex items-center space-x-4">
-              {/* Search */}
-              <div className="hidden md:block relative">
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Notifications */}
-              <button className="p-2 text-gray-400 hover:text-gray-600">
-                <Bell className="h-5 w-5" />
-              </button>
-
-              {/* Profile */}
-              <button className="flex items-center space-x-2">
-                <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <User className="h-5 w-5 text-white" />
-                </div>
-                <ChevronDown className="h-4 w-4 text-gray-400" />
-              </button>
+              {/* Profile with dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center space-x-2 focus:outline-none">
+                  {profile?.avatar ? (
+                    <img src={profile.avatar} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                  )}
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex items-center space-x-2">
+                      {profile?.avatar ? (
+                        <img src={profile.avatar} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-white" />
+                        </div>
+                      )}
+                      <div className="text-sm">
+                        <div className="font-medium">{profile?.firstName} {profile?.lastName}</div>
+                        <div className="text-gray-500 text-xs">{profile?.email}</div>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <Link href="/dashboard/profile">
+                    <DropdownMenuItem>Profile</DropdownMenuItem>
+                  </Link>
+                  <Link href="/admin/settings">
+                    <DropdownMenuItem>Settings</DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => logout()} className="text-red-600">Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>

@@ -16,6 +16,7 @@ interface User {
   lastName: string
   email: string
   role: 'USER' | 'ADMIN'
+  avatar?: string
   createdAt: string
   updatedAt: string
 }
@@ -110,9 +111,14 @@ export default function ParticipantsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Users & Participants</h1>
-          <p className="text-gray-600 text-xs">Manage users and admins - promote/demote roles</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Users & Participants</h1>
+            <p className="text-gray-600 text-xs">Manage users and admins - promote/demote roles</p>
+          </div>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+            {filteredUsers.length} results
+          </span>
         </div>
         <div className="flex items-center space-x-3">
           {successMessage && (
@@ -180,9 +186,17 @@ export default function ParticipantsPage() {
                 <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
-                        <User className="h-6 w-6 text-white" />
-                      </div>
+                      {user.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={`${user.firstName} ${user.lastName}`}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
+                          <User className="h-6 w-6 text-white" />
+                        </div>
+                      )}
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
                           {user.firstName} {user.lastName}

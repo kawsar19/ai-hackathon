@@ -6,19 +6,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Use webpack instead of turbopack for now
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
-        stream: false,
-        crypto: false,
-      }
-    }
-    return config
-  },
+  // Enable Turbopack (Next.js 16 default) with no custom config
+  turbopack: {},
 }
 
 export default nextConfig
