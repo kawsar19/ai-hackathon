@@ -27,6 +27,7 @@ export default function HackathonLanding() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
   const [user, setUser] = useState(null)
+  const [avatarVersion, setAvatarVersion] = useState(0)
 
   useEffect(() => {
     // Check if user is logged in
@@ -49,8 +50,20 @@ export default function HackathonLanding() {
     }
 
     document.addEventListener('mousedown', handleClickOutside)
+    
+    // Update user/avatar immediately after profile saves elsewhere
+    const onProfileUpdated = (e) => {
+      if (e?.detail?.user) {
+        setUser(e.detail.user)
+        setAvatarVersion((v) => v + 1)
+      }
+    }
+
+    window.addEventListener('profile-updated', onProfileUpdated)
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('profile-updated', onProfileUpdated)
     }
   }, [userDropdownOpen])
 
@@ -248,9 +261,13 @@ export default function HackathonLanding() {
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                     className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors"
                   >
-                    <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-white" />
-                    </div>
+                    {user?.avatar ? (
+                      <img src={`${user.avatar}?v=${avatarVersion}`} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
+                    ) : (
+                      <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <User className="h-5 w-5 text-white" />
+                      </div>
+                    )}
                     <span className="hidden lg:block">{user.name || user.email.split('@')[0]}</span>
                     <ChevronDown className="h-4 w-4" />
                   </button>
@@ -262,21 +279,23 @@ export default function HackathonLanding() {
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
                       <a
-                        href="/dashboard/profile"
+                        href={user.role === 'ADMIN' ? '/admin/settings' : '/dashboard/profile'}
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         onClick={() => setUserDropdownOpen(false)}
                       >
                         <User className="h-4 w-4 mr-3" />
                         Profile
                       </a>
-                      <a
-                        href="/dashboard/settings"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        onClick={() => setUserDropdownOpen(false)}
-                      >
-                        <Settings className="h-4 w-4 mr-3" />
-                        Settings
-                      </a>
+                      {user.role !== 'ADMIN' && (
+                        <a
+                          href="/dashboard/settings"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setUserDropdownOpen(false)}
+                        >
+                          <Settings className="h-4 w-4 mr-3" />
+                          Settings
+                        </a>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -331,19 +350,21 @@ export default function HackathonLanding() {
                   {user.role === 'ADMIN' ? 'Admin Dashboard' : 'Dashboard'}
                 </a>
                 <a
-                  href="/dashboard/profile"
+                  href={user.role === 'ADMIN' ? '/admin/settings' : '/dashboard/profile'}
                   className="w-full px-6 py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors block text-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Profile
                 </a>
-                <a
-                  href="/dashboard/settings"
-                  className="w-full px-6 py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors block text-center"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Settings
-                </a>
+                {user.role !== 'ADMIN' && (
+                  <a
+                    href="/dashboard/settings"
+                    className="w-full px-6 py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors block text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Settings
+                  </a>
+                )}
                 <a
                   href={googleDocLink}
                   target="_blank"

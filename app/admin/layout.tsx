@@ -42,6 +42,7 @@ export default function AdminLayout({
   const pathname = usePathname()
   const [profile, setProfile] = useState<{ firstName?: string; lastName?: string; email?: string; avatar?: string } | null>(null)
   const [notifCount, setNotifCount] = useState<number>(0)
+  const [avatarVersion, setAvatarVersion] = useState(0)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -55,6 +56,17 @@ export default function AdminLayout({
       }
     }
     fetchProfile()
+    
+    const onProfileUpdated = (e: any) => {
+      if (e?.detail?.user) {
+        setProfile(e.detail.user)
+        setAvatarVersion((v) => v + 1)
+      }
+    }
+    window.addEventListener('profile-updated', onProfileUpdated as EventListener)
+    return () => {
+      window.removeEventListener('profile-updated', onProfileUpdated as EventListener)
+    }
   }, [])
 
   return (
@@ -185,7 +197,7 @@ export default function AdminLayout({
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center space-x-2 focus:outline-none">
                   {profile?.avatar ? (
-                    <img src={profile.avatar} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
+                    <img src={`${profile.avatar}?v=${avatarVersion}`} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
                   ) : (
                     <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
                       <User className="h-5 w-5 text-white" />
@@ -197,7 +209,7 @@ export default function AdminLayout({
                   <DropdownMenuLabel>
                     <div className="flex items-center space-x-2">
                       {profile?.avatar ? (
-                        <img src={profile.avatar} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
+                        <img src={`${profile.avatar}?v=${avatarVersion}`} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
                       ) : (
                         <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
                           <User className="h-5 w-5 text-white" />
@@ -210,11 +222,8 @@ export default function AdminLayout({
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <Link href="/dashboard/profile">
-                    <DropdownMenuItem>Profile</DropdownMenuItem>
-                  </Link>
                   <Link href="/admin/settings">
-                    <DropdownMenuItem>Settings</DropdownMenuItem>
+                    <DropdownMenuItem>Profile</DropdownMenuItem>
                   </Link>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => logout()} className="text-red-600">Logout</DropdownMenuItem>

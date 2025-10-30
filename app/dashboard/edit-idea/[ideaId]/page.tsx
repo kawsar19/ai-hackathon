@@ -383,8 +383,7 @@ export default function EditIdeaPage() {
           timeline: formData.timeline,
           resources: formData.resources,
           attachments: [...existingAttachments, ...(formData.attachmentUrls || [])], // Combine existing and new URLs
-          githubUrl: formData.githubUrl,
-          demoUrl: formData.demoUrl,
+          // Intentionally omit githubUrl and demoUrl here so API performs a full idea update
         }),
       })
 

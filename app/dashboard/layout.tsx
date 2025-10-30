@@ -20,6 +20,14 @@ import {
   Home,
 } from "lucide-react"
 import { logout } from '@/lib/logout'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu'
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
@@ -218,9 +226,9 @@ export default function UserDashboardLayout({
             </h1>
 
             <div className="flex items-center space-x-4">
-              {/* Profile avatar */}
-              <div className="relative">
-                <button className="flex items-center space-x-2">
+              {/* Profile dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center space-x-2 focus:outline-none">
                   {profile?.avatar ? (
                     <img src={profile.avatar} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
                   ) : (
@@ -229,8 +237,31 @@ export default function UserDashboardLayout({
                     </div>
                   )}
                   <ChevronDown className="h-4 w-4 text-gray-400" />
-                </button>
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex items-center space-x-2">
+                      {profile?.avatar ? (
+                        <img src={profile.avatar} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-white" />
+                        </div>
+                      )}
+                      <div className="text-sm">
+                        <div className="font-medium">{profile?.firstName} {profile?.lastName}</div>
+                        <div className="text-gray-500 text-xs">{profile?.email}</div>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <Link href="/dashboard/profile">
+                    <DropdownMenuItem>Profile</DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => logout()} className="text-red-600">Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>

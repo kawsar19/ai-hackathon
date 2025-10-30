@@ -59,6 +59,7 @@ export default function MyIdeasPage() {
   const [filterStatus, setFilterStatus] = useState("all")
   const [sortBy, setSortBy] = useState("date")
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [viewingIdea, setViewingIdea] = useState<Idea | null>(null)
   
   // Project update state
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
@@ -502,7 +503,11 @@ export default function MyIdeasPage() {
                   >
                     <Edit className="h-4 w-4" />
                   </button>
-                  <button className="p-2 text-gray-400 hover:text-gray-600">
+                  <button 
+                    onClick={() => setViewingIdea(idea)}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                    title="View Details"
+                  >
                     <Eye className="h-4 w-4" />
                   </button>
                   <button 
@@ -675,6 +680,155 @@ export default function MyIdeasPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Idea Modal */}
+      {viewingIdea && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+          <div className="relative top-8 mx-auto p-0 w-11/12 md:w-4/5 lg:w-3/4 xl:w-2/3 shadow-xl rounded-lg bg-white">
+            {/* Header */}
+            <div className="flex items-start justify-between p-5 border-b border-gray-200">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-semibold text-gray-900">{viewingIdea.title}</h3>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(viewingIdea.status)}`}>
+                    {viewingIdea.status}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">Category: {viewingIdea.category}</p>
+              </div>
+              <button
+                onClick={() => setViewingIdea(null)}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-6">
+              {/* Meta */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Calendar className="h-4 w-4 text-gray-400 mr-2" />
+                  Submitted: {new Date(viewingIdea.createdAt).toLocaleDateString()}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Clock className="h-4 w-4 text-gray-400 mr-2" />
+                  Updated: {new Date(viewingIdea.updatedAt).toLocaleDateString()}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <TrendingUp className="h-4 w-4 text-gray-400 mr-2" />
+                  Progress: {viewingIdea.progress}%
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${getProgressColor(viewingIdea.progress)}`}
+                    style={{ width: `${viewingIdea.progress}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Description</h4>
+                <p className="text-gray-700 text-sm leading-relaxed">{viewingIdea.description}</p>
+              </div>
+
+              {/* Problem & Solution */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Problem Statement</h4>
+                  <p className="text-gray-700 text-sm leading-relaxed">{viewingIdea.problemStatement}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Proposed Solution</h4>
+                  <p className="text-gray-700 text-sm leading-relaxed">{viewingIdea.solution}</p>
+                </div>
+              </div>
+
+              {/* Tech Stack */}
+              {viewingIdea.techStack?.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Technology Stack</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingIdea.techStack.map((tech, i) => (
+                      <span key={i} className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded">{tech}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Attachments Gallery */}
+              {viewingIdea.attachments?.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Attachments</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {viewingIdea.attachments.map((url, i) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="group block">
+                        <div className="aspect-video w-full overflow-hidden rounded border border-gray-200 bg-gray-50">
+                          <img src={url} alt={`Attachment ${i + 1}`} className="w-full h-full object-cover group-hover:opacity-90" />
+                        </div>
+                        <div className="mt-1 text-xs text-gray-600 truncate flex items-center">
+                          <FileText className="h-3 w-3 mr-1" />
+                          {url.split('/').pop()}
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Links */}
+              {(viewingIdea.githubUrl || viewingIdea.demoUrl) && (
+                <div className="flex items-center gap-4">
+                  {viewingIdea.githubUrl && (
+                    <a href={viewingIdea.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm">
+                      <ExternalLink className="h-4 w-4 mr-1" /> GitHub
+                    </a>
+                  )}
+                  {viewingIdea.demoUrl && (
+                    <a href={viewingIdea.demoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-green-600 hover:text-green-800 text-sm">
+                      <ExternalLink className="h-4 w-4 mr-1" /> Live Demo
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Feedback */}
+              {viewingIdea.feedback && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Feedback</h4>
+                  <p className="text-sm text-gray-700">{viewingIdea.feedback}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 p-5 border-t border-gray-200">
+              <button
+                onClick={() => setViewingIdea(null)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setViewingIdea(null)
+                  window.location.href = `/dashboard/edit-idea/${viewingIdea.id}`
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" /> Edit
+              </button>
             </div>
           </div>
         </div>
