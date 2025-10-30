@@ -12,6 +12,9 @@ import {
   ExternalLink,
   X,
   CheckCircle,
+  Github,
+  Globe,
+  PlayCircle,
 } from "lucide-react"
 
 interface Idea {
@@ -33,6 +36,8 @@ interface Idea {
   attachments: string[]
   githubUrl?: string | null
   demoUrl?: string | null
+  documentationUrl?: string | null
+  videoUrl?: string | null
   user: {
     id: string
     firstName: string
@@ -47,6 +52,7 @@ export default function OngoingProjectsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [completingId, setCompletingId] = useState<string | null>(null)
 
   const [selectedProject, setSelectedProject] = useState<Idea | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
@@ -86,6 +92,27 @@ export default function OngoingProjectsPage() {
     idea.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${idea.user.firstName} ${idea.user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const markCompleted = async (ideaId: string) => {
+    try {
+      setCompletingId(ideaId)
+      const res = await fetch(`/api/admin/ideas/${ideaId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'COMPLETED' })
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed to mark as Completed')
+      }
+      setIdeas(prev => prev.filter(i => i.id !== ideaId))
+    } catch (e) {
+      console.error(e)
+      alert(e instanceof Error ? e.message : 'Failed to mark as Completed')
+    } finally {
+      setCompletingId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -169,7 +196,66 @@ export default function OngoingProjectsPage() {
                 >
                   <Eye className="h-4 w-4 inline mr-1" /> View
                 </button>
+                {(project.githubUrl || project.demoUrl) && (
+                  <button
+                    onClick={() => markCompleted(project.id)}
+                    disabled={completingId === project.id}
+                    className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {completingId === project.id ? (
+                      <>
+                        <Loader2 className="h-4 w-4 inline animate-spin mr-1" /> Completing
+                      </>
+                    ) : (
+                      <>Mark as Completed</>
+                    )}
+                  </button>
+                )}
               </div>
+              {(project.githubUrl || project.demoUrl || (project as any).documentationUrl || (project as any).videoUrl) && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {project.githubUrl && (
+                    <a
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-2.5 py-1.5 text-xs bg-gray-800 text-white rounded hover:bg-gray-900"
+                    >
+                      <Github className="h-3 w-3 mr-1.5" /> GitHub
+                    </a>
+                  )}
+                  {project.demoUrl && (
+                    <a
+                      href={project.demoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-2.5 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      <Globe className="h-3 w-3 mr-1.5" /> Live Demo
+                    </a>
+                  )}
+                  {(project as any).documentationUrl && (
+                    <a
+                      href={(project as any).documentationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-2.5 py-1.5 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                    >
+                      <FileText className="h-3 w-3 mr-1.5" /> Docs
+                    </a>
+                  )}
+                  {(project as any).videoUrl && (
+                    <a
+                      href={(project as any).videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-2.5 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      <PlayCircle className="h-3 w-3 mr-1.5" /> Video
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}

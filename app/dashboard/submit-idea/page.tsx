@@ -202,8 +202,35 @@ const techStackOptions = {
   ]
 }
 
+type SubmitFormData = {
+  title: string
+  description: string
+  category: string
+  problemStatement: string
+  solution: string
+  targetAudience: string
+  techStack: string[]
+  expectedOutcome: string
+  timeline: string
+  resources: string
+  attachments: File[]
+  attachmentUrls: string[]
+}
+
+type SubmitErrors = Partial<Record<
+  | 'title'
+  | 'description'
+  | 'category'
+  | 'problemStatement'
+  | 'solution'
+  | 'techStack'
+  | 'upload'
+  | 'submit',
+  string
+>>
+
 export default function SubmitIdeaPage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SubmitFormData>({
     title: "",
     description: "",
     category: "",
@@ -220,15 +247,15 @@ export default function SubmitIdeaPage() {
 
   const [uploadingFiles, setUploadingFiles] = useState(false)
 
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState<SubmitErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: keyof SubmitFormData | keyof SubmitErrors, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }))
+    if ((errors as any)[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" } as SubmitErrors))
     }
   }
 
@@ -290,7 +317,7 @@ export default function SubmitIdeaPage() {
   }
 
   const validateForm = () => {
-    const newErrors = {}
+    const newErrors: SubmitErrors = {}
 
     if (!formData.title.trim()) newErrors.title = "Project title is required"
     if (!formData.description.trim()) newErrors.description = "Description is required"
@@ -329,7 +356,7 @@ export default function SubmitIdeaPage() {
           expectedOutcome: formData.expectedOutcome,
           timeline: formData.timeline,
           resources: formData.resources,
-          attachments: formData.attachmentUrls // Send URLs instead of files
+          attachments: formData.attachmentUrls, // Send URLs instead of files
         }),
       })
 
@@ -338,9 +365,11 @@ export default function SubmitIdeaPage() {
         throw new Error(errorData.error || 'Failed to submit idea')
       }
 
-      const data = await response.json()
+      await response.json()
       setIsSubmitting(false)
-      setSubmitSuccess(true)
+      // Redirect to My Ideas after successful submission
+      window.location.href = '/dashboard/my-ideas'
+      return
       
       // Reset form
       setFormData({
@@ -366,7 +395,8 @@ export default function SubmitIdeaPage() {
     } catch (error) {
       console.error('Error submitting idea:', error)
       setIsSubmitting(false)
-      setErrors({ submit: error.message })
+      const err = error as any
+      setErrors({ submit: err?.message || 'Failed to submit idea' })
     }
   }
 
@@ -641,6 +671,8 @@ export default function SubmitIdeaPage() {
                 placeholder="What do you expect to achieve with this project?"
               />
             </div>
+
+            {/* Optional links removed as requested */}
           </div>
         </div>
 

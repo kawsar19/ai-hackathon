@@ -69,6 +69,8 @@ model Idea {
   feedback        String?
   githubUrl       String?
   demoUrl         String?
+  documentationUrl String?
+  videoUrl         String?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 

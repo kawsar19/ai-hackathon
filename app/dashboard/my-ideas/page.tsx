@@ -21,6 +21,7 @@ import {
   Github,
   Globe,
 } from "lucide-react"
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface Idea {
   id: string
@@ -43,6 +44,8 @@ interface Idea {
   feedback?: string
   githubUrl?: string
   demoUrl?: string
+  documentationUrl?: string
+  videoUrl?: string
   user: {
     id: string
     firstName: string
@@ -66,12 +69,19 @@ export default function MyIdeasPage() {
   const [projectData, setProjectData] = useState({
     githubUrl: '',
     demoUrl: '',
+    documentationUrl: '',
+    videoUrl: '',
     progress: 0,
     status: ''
   })
   const [isUpdatingProject, setIsUpdatingProject] = useState(false)
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [updateSuccess, setUpdateSuccess] = useState(false)
+
+  // Quick progress modal state
+  const [progressIdeaId, setProgressIdeaId] = useState<string | null>(null)
+  const [progressValue, setProgressValue] = useState<number>(0)
+  const [savingProgress, setSavingProgress] = useState(false)
 
   useEffect(() => {
     fetchIdeas()
@@ -90,7 +100,8 @@ export default function MyIdeasPage() {
       setIdeas(data.ideas || [])
     } catch (error) {
       console.error('Error fetching ideas:', error)
-      setError(error.message)
+      const err = error as any
+      setError(err?.message || 'Failed to load ideas')
     } finally {
       setLoading(false)
     }
@@ -132,6 +143,8 @@ export default function MyIdeasPage() {
     setProjectData({
       githubUrl: idea.githubUrl || '',
       demoUrl: idea.demoUrl || '',
+      documentationUrl: (idea as any).documentationUrl || '',
+      videoUrl: (idea as any).videoUrl || '',
       progress: idea.progress,
       status: idea.status
     })
@@ -144,6 +157,8 @@ export default function MyIdeasPage() {
     setProjectData({
       githubUrl: '',
       demoUrl: '',
+      documentationUrl: '',
+      videoUrl: '',
       progress: 0,
       status: ''
     })
@@ -158,6 +173,37 @@ export default function MyIdeasPage() {
       setIsUpdatingProject(true)
       setUpdateError(null)
 
+      // Client-side validation
+      const allowedStatuses = ['IN_PROGRESS', 'COMPLETED']
+      const isValidUrl = (value: string) => {
+        if (!value) return true
+        try {
+          const u = new URL(value)
+          return u.protocol === 'http:' || u.protocol === 'https:'
+        } catch {
+          return false
+        }
+      }
+
+      if (!allowedStatuses.includes(projectData.status)) {
+        throw new Error('Status must be IN_PROGRESS or COMPLETED')
+      }
+      if (Number.isNaN(projectData.progress) || projectData.progress < 0 || projectData.progress > 100) {
+        throw new Error('Progress must be a number between 0 and 100')
+      }
+      if (!isValidUrl(projectData.githubUrl)) {
+        throw new Error('GitHub URL is invalid')
+      }
+      if (!isValidUrl(projectData.demoUrl)) {
+        throw new Error('Live Demo URL is invalid')
+      }
+      if (!isValidUrl((projectData as any).documentationUrl)) {
+        throw new Error('Documentation URL is invalid')
+      }
+      if (!isValidUrl((projectData as any).videoUrl)) {
+        throw new Error('Video URL is invalid')
+      }
+
       const response = await fetch(`/api/ideas/${editingProjectId}`, {
         method: 'PATCH',
         headers: {
@@ -166,6 +212,8 @@ export default function MyIdeasPage() {
         body: JSON.stringify({
           githubUrl: projectData.githubUrl,
           demoUrl: projectData.demoUrl,
+          documentationUrl: projectData.documentationUrl,
+          videoUrl: projectData.videoUrl,
           progress: projectData.progress,
           status: projectData.status,
         }),
@@ -183,6 +231,8 @@ export default function MyIdeasPage() {
               ...idea, 
               githubUrl: projectData.githubUrl,
               demoUrl: projectData.demoUrl,
+              documentationUrl: projectData.documentationUrl,
+              videoUrl: projectData.videoUrl,
               progress: projectData.progress,
               status: projectData.status,
             }
@@ -195,7 +245,8 @@ export default function MyIdeasPage() {
       }, 2000)
     } catch (error) {
       console.error('Error updating project:', error)
-      setUpdateError(error.message)
+      const err = error as any
+      setUpdateError(err?.message || 'Failed to update project')
     } finally {
       setIsUpdatingProject(false)
     }
@@ -320,48 +371,7 @@ export default function MyIdeasPage() {
         )}
       </div>
 
-      {/* Filters and Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-            <div className="flex space-x-4">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All Status</option>
-                <option value="PENDING">Pending</option>
-                <option value="APPROVED">Approved</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="REJECTED">Rejected</option>
-              </select>
-
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="date">Sort by Date</option>
-                <option value="progress">Sort by Progress</option>
-                <option value="title">Sort by Title</option>
-              </select>
-            </div>
-
-            <div className="text-sm text-gray-600">
-              Showing {sortedIdeas.length} of {ideas.length} ideas
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">{ideas.length}</div>
-            <div className="text-sm text-gray-600">Total Ideas</div>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Ideas List */}
       <div className="space-y-6">
@@ -475,6 +485,28 @@ export default function MyIdeasPage() {
                         Live Demo
                       </a>
                     )}
+                {(idea as any).documentationUrl && (
+                  <a
+                    href={(idea as any).documentationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-purple-600 hover:text-purple-800 text-sm"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Documentation
+                  </a>
+                )}
+                {(idea as any).videoUrl && (
+                  <a
+                    href={(idea as any).videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-red-600 hover:text-red-800 text-sm"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Video
+                  </a>
+                )}
                   </div>
 
                   {/* Feedback */}
@@ -488,44 +520,76 @@ export default function MyIdeasPage() {
                 
                 <div className="flex items-center space-x-2 ml-4">
                   {idea.status === "IN_PROGRESS" && (
-                    <button 
-                      onClick={() => openProjectUpdate(idea)}
-                      className="p-2 text-gray-400 hover:text-green-600"
-                      title="Update Project"
-                    >
-                      <Save className="h-4 w-4" />
-                    </button>
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button 
+                            onClick={() => openProjectUpdate(idea)}
+                            className="p-2 text-gray-400 hover:text-green-600"
+                          >
+                            <Save className="h-4 w-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Update Project</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button 
+                            onClick={() => {
+                              setProgressIdeaId(idea.id)
+                              setProgressValue(idea.progress)
+                            }}
+                            className="p-2 text-gray-400 hover:text-blue-600"
+                          >
+                            <TrendingUp className="h-4 w-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Quick Update Progress</TooltipContent>
+                      </Tooltip>
+                    </>
                   )}
                   {idea.status === "PENDING" && (
-                    <button 
-                      onClick={() => window.location.href = `/dashboard/edit-idea/${idea.id}`}
-                      className="p-2 text-gray-400 hover:text-blue-600"
-                      title="Edit Idea"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button 
+                          onClick={() => window.location.href = `/dashboard/edit-idea/${idea.id}`}
+                          className="p-2 text-gray-400 hover:text-blue-600"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit Idea</TooltipContent>
+                    </Tooltip>
                   )}
-                  <button 
-                    onClick={() => setViewingIdea(idea)}
-                    className="p-2 text-gray-400 hover:text-gray-600"
-                    title="View Details"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteIdea(idea.id)}
-                    disabled={deletingId === idea.id}
-                    className={`p-2 text-gray-400 hover:text-red-600 ${
-                      deletingId === idea.id ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                    title="Delete Idea"
-                  >
-                    {deletingId === idea.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-4 w-4" />
-                    )}
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button 
+                        onClick={() => setViewingIdea(idea)}
+                        className="p-2 text-gray-400 hover:text-gray-600"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>View Details</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button 
+                        onClick={() => handleDeleteIdea(idea.id)}
+                        disabled={deletingId === idea.id}
+                        className={`p-2 text-gray-400 hover:text-red-600 ${
+                          deletingId === idea.id ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        {deletingId === idea.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete Idea</TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             </div>
@@ -623,6 +687,36 @@ export default function MyIdeasPage() {
                   />
                 </div>
 
+                {/* Documentation URL (optional) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FileText className="h-4 w-4 inline mr-1" />
+                    Documentation URL (optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={projectData.documentationUrl}
+                    onChange={(e) => setProjectData({...projectData, documentationUrl: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://docs.example.com/your-docs"
+                  />
+                </div>
+
+                {/* Project Explanation Video URL (optional) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <ExternalLink className="h-4 w-4 inline mr-1" />
+                    Project Explanation Video URL (optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={projectData.videoUrl}
+                    onChange={(e) => setProjectData({...projectData, videoUrl: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://youtu.be/your-video"
+                  />
+                </div>
+
                 {/* Progress */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -640,20 +734,9 @@ export default function MyIdeasPage() {
                   />
                 </div>
 
-                {/* Status */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    value={projectData.status}
-                    onChange={(e) => setProjectData({...projectData, status: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="COMPLETED">Completed</option>
-                  </select>
-                </div>
+          
+
+            
 
                 {/* Modal Actions */}
                 <div className="flex justify-end space-x-3 pt-4">
@@ -682,6 +765,62 @@ export default function MyIdeasPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Progress Modal */}
+      {progressIdeaId && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+          <div className="relative top-1/4 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Update Progress</h3>
+              <button onClick={() => setProgressIdeaId(null)} className="text-gray-400 hover:text-gray-600"><X className="h-6 w-6" /></button>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-700">Progress</span>
+                <span className="text-sm font-semibold text-gray-900">{progressValue}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={progressValue}
+                onChange={(e) => setProgressValue(parseInt(e.target.value) || 0)}
+                className="w-full"
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button onClick={() => setProgressIdeaId(null)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">Cancel</button>
+              <button
+                onClick={async () => {
+                  try {
+                    setSavingProgress(true)
+                    const res = await fetch(`/api/ideas/${progressIdeaId}/progress`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ progress: progressValue }),
+                    })
+                    if (!res.ok) {
+                      const err = await res.json()
+                      throw new Error(err.error || 'Failed to update progress')
+                    }
+                    const data = await res.json()
+                    setIdeas(prev => prev.map(i => i.id === progressIdeaId ? { ...i, progress: data.idea.progress, updatedAt: data.idea.updatedAt } : i))
+                    setProgressIdeaId(null)
+                  } catch (e) {
+                    alert(e instanceof Error ? e.message : 'Failed to update progress')
+                  } finally {
+                    setSavingProgress(false)
+                  }
+                }}
+                disabled={savingProgress}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {savingProgress ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
+              </button>
             </div>
           </div>
         </div>
@@ -790,8 +929,8 @@ export default function MyIdeasPage() {
               )}
 
               {/* Links */}
-              {(viewingIdea.githubUrl || viewingIdea.demoUrl) && (
-                <div className="flex items-center gap-4">
+              {(viewingIdea.githubUrl || viewingIdea.demoUrl || (viewingIdea as any).documentationUrl || (viewingIdea as any).videoUrl) && (
+                <div className="flex items-center gap-4 flex-wrap">
                   {viewingIdea.githubUrl && (
                     <a href={viewingIdea.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 text-sm">
                       <ExternalLink className="h-4 w-4 mr-1" /> GitHub
@@ -800,6 +939,16 @@ export default function MyIdeasPage() {
                   {viewingIdea.demoUrl && (
                     <a href={viewingIdea.demoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-green-600 hover:text-green-800 text-sm">
                       <ExternalLink className="h-4 w-4 mr-1" /> Live Demo
+                    </a>
+                  )}
+                  {(viewingIdea as any).documentationUrl && (
+                    <a href={(viewingIdea as any).documentationUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-purple-600 hover:text-purple-800 text-sm">
+                      <ExternalLink className="h-4 w-4 mr-1" /> Documentation
+                    </a>
+                  )}
+                  {(viewingIdea as any).videoUrl && (
+                    <a href={(viewingIdea as any).videoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-red-600 hover:text-red-800 text-sm">
+                      <ExternalLink className="h-4 w-4 mr-1" /> Video
                     </a>
                   )}
                 </div>
