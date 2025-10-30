@@ -33,11 +33,12 @@ const navigation = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Users & Admins", href: "/admin/participants", icon: Users },
   { name: "Projects", href: "/admin/projects", icon: FileText },
-  { name: "Marks", href: "/admin/marks", icon: Award },
-  { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
   { name: "Submitted Ideas", href: "/admin/submitted", icon: FileText },
   { name: "Approved Projects", href: "/admin/approved", icon: Award },
   { name: "Ongoing Projects", href: "/admin/ongoing", icon: Award },
+  { name: "Completed Projects", href: "/admin/completed", icon: Award },
+  { name: "Marks", href: "/admin/marks", icon: Award },
+  { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
 ]
 
 export default function AdminLayout({
@@ -50,6 +51,7 @@ export default function AdminLayout({
   const [profile, setProfile] = useState<{ firstName?: string; lastName?: string; email?: string; avatar?: string } | null>(null)
   const [notifCount, setNotifCount] = useState<number>(0)
   const [avatarVersion, setAvatarVersion] = useState(0)
+  const [ideaCounts, setIdeaCounts] = useState<{ submitted: number; approved: number; ongoing: number; completed: number }>({ submitted: 0, approved: 0, ongoing: 0, completed: 0 })
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -63,6 +65,23 @@ export default function AdminLayout({
       }
     }
     fetchProfile()
+    const fetchCounts = async () => {
+      try {
+        const res = await fetch('/api/admin/ideas', { credentials: 'include' })
+        if (!res.ok) return
+        const data = await res.json()
+        const ideas = Array.isArray(data?.ideas) ? data.ideas : []
+        const toStatus = (s: any) => String(s || '').toUpperCase()
+        const submitted = ideas.filter((i: any) => toStatus(i.status) === 'PENDING').length
+        const approved = ideas.filter((i: any) => toStatus(i.status) === 'APPROVED').length
+        const ongoing = ideas.filter((i: any) => toStatus(i.status) === 'IN_PROGRESS').length
+        const completed = ideas.filter((i: any) => toStatus(i.status) === 'COMPLETED').length
+        setIdeaCounts({ submitted, approved, ongoing, completed })
+      } catch (_) {
+        // ignore
+      }
+    }
+    fetchCounts()
     
     const onProfileUpdated = (e: any) => {
       if (e?.detail?.user) {
@@ -88,6 +107,12 @@ export default function AdminLayout({
         <nav className="mt-5 flex-1 px-2 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
             const isActive = pathname === item.href
+            const count =
+              item.href === '/admin/submitted' ? ideaCounts.submitted :
+              item.href === '/admin/approved' ? ideaCounts.approved :
+              item.href === '/admin/ongoing' ? ideaCounts.ongoing :
+              item.href === '/admin/completed' ? ideaCounts.completed :
+              undefined
             return (
               <Link
                 key={item.name}
@@ -103,7 +128,14 @@ export default function AdminLayout({
                     isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500"
                   } mr-3 h-5 w-5`}
                 />
-                {item.name}
+                <span className="flex-1 flex items-center justify-between">
+                  <span>{item.name}</span>
+                  {typeof count === 'number' && (
+                    <span className="ml-3 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700 border border-gray-200">
+                      {count}
+                    </span>
+                  )}
+                </span>
               </Link>
             )
           })}
@@ -141,6 +173,12 @@ export default function AdminLayout({
           <nav className="flex-1 px-2 py-4 overflow-y-auto">
             {navigation.map((item) => {
               const isActive = pathname === item.href
+              const count =
+                item.href === '/admin/submitted' ? ideaCounts.submitted :
+                item.href === '/admin/approved' ? ideaCounts.approved :
+                item.href === '/admin/ongoing' ? ideaCounts.ongoing :
+                item.href === '/admin/completed' ? ideaCounts.completed :
+                undefined
               return (
                 <Link
                   key={item.name}
@@ -157,7 +195,14 @@ export default function AdminLayout({
                       isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500"
                     } mr-3 h-5 w-5`}
                   />
-                  {item.name}
+                  <span className="flex-1 flex items-center justify-between">
+                    <span>{item.name}</span>
+                    {typeof count === 'number' && (
+                      <span className="ml-3 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700 border border-gray-200">
+                        {count}
+                      </span>
+                    )}
+                  </span>
                 </Link>
               )
             })}
