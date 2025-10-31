@@ -110,6 +110,67 @@ async function main() {
     ],
   })
 
+  // Seed mail templates
+  await (prisma as any).mailTemplate.createMany({
+    data: [
+      {
+        name: 'Welcome - Hackathon',
+        subject: 'Welcome to QSL AI Hackathon 🎉',
+        bodyHtml: `<div style="font-family:Arial,sans-serif">
+          <h2>Welcome to QSL AI Hackathon</h2>
+          <p>Hi {{firstName}},</p>
+          <p>We’re excited to have you on board. Submit your idea and start building amazing things!</p>
+          <p><a href="{{appUrl}}/dashboard/submit-idea" style="background:#2563eb;color:#fff;padding:10px 16px;text-decoration:none;border-radius:6px">Submit Idea</a></p>
+          <p>Best of luck! 🚀</p>
+        </div>`,
+        createdById: admin.id,
+      },
+      {
+        name: 'Idea Submitted',
+        subject: 'Your idea has been submitted ✅',
+        bodyHtml: `<div style="font-family:Arial,sans-serif">
+          <h2>Idea Submitted</h2>
+          <p>Hi {{firstName}},</p>
+          <p>We received your idea <strong>{{ideaTitle}}</strong>. Our team will review it shortly.</p>
+          <p>You can track status at <a href="{{appUrl}}/dashboard/my-ideas">My Ideas</a>.</p>
+        </div>`,
+        createdById: admin.id,
+      },
+      {
+        name: 'Project Deadline Reminder',
+        subject: 'Reminder: Project deadline approaching ⏰',
+        bodyHtml: `<div style="font-family:Arial,sans-serif">
+          <h2>Deadline Reminder</h2>
+          <p>Hi {{firstName}},</p>
+          <p>This is a friendly reminder that the project submission deadline is on <strong>{{deadlineDate}}</strong>.</p>
+          <p>Please update your progress or complete your project soon.</p>
+          <p><a href="{{appUrl}}/dashboard/my-ideas" style="background:#2563eb;color:#fff;padding:10px 16px;text-decoration:none;border-radius:6px">Update Progress</a></p>
+        </div>`,
+        createdById: admin.id,
+      },
+      {
+        name: 'Idea Approved',
+        subject: 'Your idea is approved 🎯',
+        bodyHtml: `<div style="font-family:Arial,sans-serif">
+          <h2>Congratulations!</h2>
+          <p>Your idea <strong>{{ideaTitle}}</strong> has been approved. You can now start building.</p>
+          <p>Visit <a href="{{appUrl}}/dashboard/my-ideas">My Ideas</a> to proceed.</p>
+        </div>`,
+        createdById: admin.id,
+      },
+      {
+        name: 'Project Completed',
+        subject: 'Great job! Project completed 🏁',
+        bodyHtml: `<div style="font-family:Arial,sans-serif">
+          <h2>Well done!</h2>
+          <p>You marked your project <strong>{{projectTitle}}</strong> as completed. Our judges will review it soon.</p>
+          <p>Thank you for participating in QSL AI Hackathon.</p>
+        </div>`,
+        createdById: admin.id,
+      },
+    ]
+  })
+
   console.log('✅ Database seeded successfully!')
   console.log('👤 Admin user:', admin.email)
   console.log('👤 Demo user:', user.email)

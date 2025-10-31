@@ -32,11 +32,12 @@ const navigation = [
   { name: "Home", href: "/", icon: Home },
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Users & Admins", href: "/admin/participants", icon: Users },
-  { name: "Projects", href: "/admin/projects", icon: FileText },
   { name: "Submitted Ideas", href: "/admin/submitted", icon: FileText },
   { name: "Approved Projects", href: "/admin/approved", icon: Award },
   { name: "Ongoing Projects", href: "/admin/ongoing", icon: Award },
   { name: "Completed Projects", href: "/admin/completed", icon: Award },
+  { name: "Mail Templates", href: "/admin/mail-templates", icon: FileText },
+  { name: "Send Mail", href: "/admin/send-mail", icon: FileText },
   { name: "Marks", href: "/admin/marks", icon: Award },
   { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
 ]

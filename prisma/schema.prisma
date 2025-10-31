@@ -47,6 +47,7 @@ model User {
   sessions    Session[]
   scoresGiven IdeaScore[] @relation("AdminScores")
   passwordResetTokens PasswordResetToken[]
+  mailTemplates MailTemplate[]
 
   @@map("users")
 }
@@ -152,4 +153,18 @@ model PasswordResetToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("password_reset_tokens")
+}
+
+model MailTemplate {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  subject   String
+  bodyHtml  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Relations
+  createdById String?  @db.ObjectId
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("mail_templates")
 }
