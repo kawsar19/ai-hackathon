@@ -43,4 +43,24 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   })
 }
 
+export async function sendOTPEmail(to: string, otp: string) {
+  if (!mailFrom) throw new Error('MAIL_FROM not configured')
+  await mailer.sendMail({
+    from: mailFrom,
+    to,
+    subject: 'Verify your email address - OTP',
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;max-width:600px">
+        <h2 style="color:#2563eb">Email Verification</h2>
+        <p>Thank you for registering! Please verify your email address using the OTP below:</p>
+        <div style="background:#f3f4f6;border-radius:8px;padding:20px;text-align:center;margin:20px 0">
+          <h1 style="color:#2563eb;font-size:36px;letter-spacing:8px;margin:0">${otp}</h1>
+        </div>
+        <p style="color:#6b7280;font-size:14px">This OTP will expire in 10 minutes. If you didn't request this, you can ignore this email.</p>
+        <p style="color:#6b7280;font-size:14px">For testing purposes, you can also use the bypass code: <strong>0000</strong></p>
+      </div>
+    `,
+  })
+}
+
 

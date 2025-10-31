@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, verifyPassword, generateToken } from '@/lib/auth'
+import { sendOTPEmail } from '@/lib/mailer'
 import { UserRole } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
@@ -45,7 +46,11 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // Create user
+    // Generate 4-digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000).toString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+
+    // Create user with unverified status
     const user = await prisma.user.create({
       data: {
         email,
@@ -55,6 +60,9 @@ export async function POST(request: NextRequest) {
         employeeId: cleanEmployeeId,
         department: department || null,
         role: UserRole.USER, // Default role is USER
+        emailVerified: false,
+        otp,
+        otpExpiresAt: expiresAt
       },
       select: {
         id: true,
@@ -64,19 +72,21 @@ export async function POST(request: NextRequest) {
         role: true,
         department: true,
         employeeId: true,
+        emailVerified: true,
       }
     })
 
-    // Generate token
-    const token = generateToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role
-    })
+    // Send OTP email
+    try {
+      await sendOTPEmail(email, otp)
+    } catch (emailError) {
+      console.error('Failed to send OTP email:', emailError)
+      // Don't fail the request if email fails (for development)
+    }
 
     return NextResponse.json({
       user,
-      token
+      message: 'Registration successful. Please verify your email with the OTP sent.'
     }, { status: 201 })
 
   } catch (error) {
