@@ -16,16 +16,33 @@ export const mailer = gmailUser && gmailAppPassword
         user: gmailUser,
         pass: gmailAppPassword,
       },
+      pool: true,
     })
   : nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
       secure: smtpPort === 465,
       auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
+      pool: true,
+      maxConnections: 1,
+      maxMessages: Infinity,
+      connectionTimeout: 10_000,
+      socketTimeout: 10_000,
     })
+
+let verifyPromise: Promise<void> | null = null
+async function ensureTransportReady() {
+  if (!verifyPromise) {
+    verifyPromise = new Promise((resolve, reject) => {
+      mailer.verify((err: unknown) => (err ? reject(err) : resolve()))
+    })
+  }
+  return verifyPromise
+}
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   if (!mailFrom) throw new Error('MAIL_FROM not configured')
+  await ensureTransportReady()
   await mailer.sendMail({
     from: mailFrom,
     to,
@@ -45,6 +62,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
 
 export async function sendOTPEmail(to: string, otp: string) {
   if (!mailFrom) throw new Error('MAIL_FROM not configured')
+  await ensureTransportReady()
   await mailer.sendMail({
     from: mailFrom,
     to,
