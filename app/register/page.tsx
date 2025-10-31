@@ -37,9 +37,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
-  const [showOTPVerification, setShowOTPVerification] = useState(false)
-  const [otp, setOtp] = useState("")
-  const [registeredEmail, setRegisteredEmail] = useState("")
+  
   
   const router = useRouter()
 
@@ -107,9 +105,8 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (response.ok) {
-        setSuccess("Registration successful! OTP sent to your email.")
-        setRegisteredEmail(formData.email)
-        setShowOTPVerification(true)
+        setSuccess("Registration successful! Redirecting to login...")
+        setTimeout(() => router.push('/login'), 1500)
       } else {
         setError(data.error || 'Registration failed')
       }
@@ -120,81 +117,7 @@ export default function RegisterPage() {
     }
   }
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!otp || otp.length !== 4) {
-      setError("Please enter a valid 4-digit OTP")
-      return
-    }
-
-    setIsLoading(true)
-    setError("")
-
-    try {
-      const response = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: registeredEmail,
-          otp: otp,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setSuccess("Email verified successfully! Redirecting to login...")
-        
-        // Store token in localStorage if returned
-        if (data.token) {
-          localStorage.setItem('token', data.token)
-        }
-        
-        // Redirect to login page after 2 seconds
-        setTimeout(() => {
-          router.push('/login')
-        }, 2000)
-      } else {
-        setError(data.error || 'OTP verification failed')
-      }
-    } catch (error) {
-      setError('Network error. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleResendOTP = async () => {
-    setIsLoading(true)
-    setError("")
-
-    try {
-      const response = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: registeredEmail,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setSuccess("OTP resent to your email")
-      } else {
-        setError(data.error || 'Failed to resend OTP')
-      }
-    } catch (error) {
-      setError('Network error. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -420,87 +343,28 @@ export default function RegisterPage() {
             </div>
 
             {/* Submit Button */}
-            {!showOTPVerification && (
-              <div>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Creating account...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Create account
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Create account
+                  </>
+                )}
+              </button>
+            </div>
           </form>
 
-          {/* OTP Verification Form */}
-          {showOTPVerification && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Verify Your Email</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Enter the 4-digit code sent to <span className="font-medium">{registeredEmail}</span>
-              </p>
-              <form onSubmit={handleVerifyOTP} className="space-y-4">
-                <div>
-                  <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
-                    OTP Code
-                  </label>
-                  <input
-                    id="otp"
-                    name="otp"
-                    type="text"
-                    maxLength={4}
-                    value={otp}
-                    onChange={(e) => {
-                      setOtp(e.target.value.replace(/\D/g, ''))
-                      setError("")
-                    }}
-                    className="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-2xl text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="0000"
-                  />
-                  <p className="mt-2 text-xs text-gray-500">
-                    For testing, you can use the bypass code: <span className="font-mono font-semibold">0000</span>
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isLoading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Verifying...
-                      </>
-                    ) : (
-                      'Verify Email'
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleResendOTP}
-                    disabled={isLoading}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Resend
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+          
         </div>
       </div>
     </div>

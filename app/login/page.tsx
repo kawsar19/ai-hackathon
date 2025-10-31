@@ -177,13 +177,6 @@ function LoginForm() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end -mt-2 mb-2">
-              <Link href="/forgot-password" className="text-xs text-blue-600 hover:text-blue-700">
-                Forgot password?
-              </Link>
-            </div>
-            
-            {/* Submit Button */}
             <div>
               <button
                 type="submit"

@@ -10,7 +10,7 @@ async function main() {
   const adminPassword = await bcrypt.hash('admin123', 12)
   const admin = await prisma.user.upsert({
     where: { email: 'admin@qtec.com' },
-    update: { emailVerified: true },
+    update: {},
     create: {
       email: 'admin@qtec.com',
       password: adminPassword,
@@ -23,7 +23,6 @@ async function main() {
       location: 'Dhaka, Bangladesh',
       bio: 'System administrator for QSL AI Hackathon platform',
       skills: ['System Administration', 'Database Management', 'Security'],
-      emailVerified: true,
     },
   })
 
@@ -31,7 +30,7 @@ async function main() {
   const userPassword = await bcrypt.hash('user123', 12)
   const user = await prisma.user.upsert({
     where: { email: 'user@qtec.com' },
-    update: { emailVerified: true },
+    update: {},
     create: {
       email: 'user@qtec.com',
       password: userPassword,
@@ -44,7 +43,6 @@ async function main() {
       location: 'Dhaka, Bangladesh',
       bio: 'Passionate about AI and machine learning. Love building innovative solutions that make a difference.',
       skills: ['Python', 'React', 'Node.js', 'Machine Learning', 'AI'],
-      emailVerified: true,
     },
   })
 
