@@ -22,6 +22,15 @@ export const metadata: Metadata = {
   description:
     "Join the QSL AI Hackathon - Build AI solutions, compete for prizes, and innovate with cutting-edge technology",
   generator: "v0.app",
+  icons: {
+    icon: [
+      { url: "/placeholder-logo.svg", rel: "icon" },
+      { url: "/placeholder-logo.png", rel: "icon", type: "image/png" },
+    ],
+    apple: [
+      { url: "/placeholder-logo.png" },
+    ],
+  },
 }
 
 export default function RootLayout({
