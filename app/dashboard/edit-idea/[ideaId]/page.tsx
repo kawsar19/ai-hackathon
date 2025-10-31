@@ -394,7 +394,8 @@ export default function EditIdeaPage() {
 
       const data = await response.json()
       setIsSubmitting(false)
-      setSubmitSuccess(true)
+      // Redirect to My Ideas after successful update
+      router.push('/dashboard/my-ideas')
       
     } catch (error) {
       console.error('Error updating idea:', error)

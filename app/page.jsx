@@ -67,6 +67,56 @@ export default function HackathonLanding() {
     }
   }, [userDropdownOpen])
 
+  // Verify session against server on load and when tab regains focus.
+  useEffect(() => {
+    const clearSessionLocally = () => {
+      // Clear without navigating to avoid reload loops on the home page
+      const isProduction = process.env.NODE_ENV === 'production'
+      document.cookie = `token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${isProduction ? 'secure; samesite=strict' : ''}`
+      localStorage.removeItem('user')
+      localStorage.removeItem('token')
+      setUser(null)
+      setUserDropdownOpen(false)
+    }
+
+    const checkSession = async () => {
+      try {
+        // If there is no token at all, skip server check
+        const hasTokenCookie = document.cookie.split('; ').some((c) => c.startsWith('token='))
+        const hasTokenLocal = !!localStorage.getItem('token')
+        if (!hasTokenCookie && !hasTokenLocal) {
+          return
+        }
+
+        const res = await fetch('/api/auth/profile', { credentials: 'include' })
+        if (!res.ok) {
+          // Token invalid or user deleted
+          clearSessionLocally()
+          // Only navigate away if not already on public routes
+          const pathname = window.location.pathname
+          const isPublic = pathname === '/' || pathname === '/login' || pathname === '/register'
+          if (!isPublic) {
+            window.location.href = '/'
+          }
+          return
+        }
+        const data = await res.json()
+        if (data?.user) {
+          setUser(data.user)
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
+      } catch {
+        // Network or other error → clear locally but don't navigate on home
+        clearSessionLocally()
+      }
+    }
+
+    checkSession()
+    const onFocus = () => checkSession()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [])
+
   const handleLogout = () => {
     // Clear token cookie
     const isProduction = process.env.NODE_ENV === 'production'

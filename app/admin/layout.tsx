@@ -90,9 +90,14 @@ export default function AdminLayout({
         setAvatarVersion((v) => v + 1)
       }
     }
+    const onIdeasUpdated = () => {
+      fetchCounts()
+    }
     window.addEventListener('profile-updated', onProfileUpdated as EventListener)
+    window.addEventListener('ideas-updated', onIdeasUpdated as EventListener)
     return () => {
       window.removeEventListener('profile-updated', onProfileUpdated as EventListener)
+      window.removeEventListener('ideas-updated', onIdeasUpdated as EventListener)
     }
   }, [])
 

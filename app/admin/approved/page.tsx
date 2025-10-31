@@ -95,6 +95,8 @@ export default function ApprovedProjectsPage() {
         throw new Error(err.error || 'Failed to move to In Progress')
       }
       setIdeas(prev => prev.filter(i => i.id !== ideaId))
+      // Notify layout to refresh sidebar counts
+      window.dispatchEvent(new Event('ideas-updated'))
     } catch (e) {
       console.error(e)
       alert(e instanceof Error ? e.message : 'Failed to move to In Progress')

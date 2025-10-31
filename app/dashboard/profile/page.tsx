@@ -147,6 +147,13 @@ export default function ProfilePage() {
     if (!profileData.lastName.trim()) newErrors.lastName = "Last name is required"
     if (!profileData.email.trim()) newErrors.email = "Email is required"
     if (!profileData.phone.trim()) newErrors.phone = "Phone number is required"
+    else {
+      // Bangladesh numbers: +8801XXXXXXXXX or 01XXXXXXXXX, with operator codes 13-19
+      const bdPhoneRegex = /^(\+?88)?01[3-9]\d{8}$/
+      if (!bdPhoneRegex.test(profileData.phone.trim())) {
+        newErrors.phone = "Enter a valid Bangladeshi phone (e.g., 01XXXXXXXXX)"
+      }
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -463,11 +470,10 @@ export default function ProfilePage() {
                       <input
                         type="email"
                         value={profileData.email}
-                        onChange={(e) => handleInputChange("email", e.target.value)}
-                        disabled={!isEditing}
+                        readOnly
                         className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           errors.email ? "border-red-300" : "border-gray-300"
-                        } ${!isEditing ? "bg-gray-50" : ""}`}
+                        } bg-gray-50`}
                       />
                     </div>
                     {errors.email && (

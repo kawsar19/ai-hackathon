@@ -17,24 +17,50 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Get all ideas with user information
-    const ideas = await prisma.idea.findMany({
-      include: {
-        user: {
+    // Get all ideas with user information (handle potential orphaned ideas defensively)
+    let ideas: any[] = []
+    try {
+      ideas = await prisma.idea.findMany({
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              department: true,
+              employeeId: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+    } catch (e) {
+      // Fallback: fetch ideas without join and enrich manually; skip ideas whose user is missing
+      const rawIdeas = await prisma.idea.findMany({
+        orderBy: { createdAt: 'desc' }
+      })
+      const result: any[] = []
+      for (const idea of rawIdeas) {
+        const user = await prisma.user.findUnique({
+          where: { id: idea.userId },
           select: {
             id: true,
             firstName: true,
             lastName: true,
             email: true,
             department: true,
-            employeeId: true
+            employeeId: true,
           }
+        })
+        if (!user) {
+          // skip orphan records to avoid downstream crashes
+          continue
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
+        result.push({ ...idea, user })
       }
-    })
+      ideas = result
+    }
 
     return NextResponse.json({ ideas })
 

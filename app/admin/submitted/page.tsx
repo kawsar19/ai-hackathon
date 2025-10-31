@@ -97,6 +97,8 @@ export default function SubmittedIdeasPage() {
       }
       // Remove from list (no longer pending)
       setIdeas(prev => prev.filter(i => i.id !== ideaId))
+      // Notify layout to refresh sidebar counts
+      window.dispatchEvent(new Event('ideas-updated'))
     } catch (e) {
       console.error(e)
       alert(e instanceof Error ? e.message : 'Failed to approve idea')

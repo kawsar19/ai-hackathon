@@ -14,6 +14,7 @@ import {
   Github,
   Globe,
   PlayCircle,
+  CheckCircle,
 } from "lucide-react"
 
 interface Idea {
@@ -54,6 +55,16 @@ export default function CompletedProjectsPage() {
 
   const [selectedProject, setSelectedProject] = useState<Idea | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [isGithubModalOpen, setIsGithubModalOpen] = useState(false)
+  const [githubLoading, setGithubLoading] = useState(false)
+  const [githubError, setGithubError] = useState<string | null>(null)
+  const [commits, setCommits] = useState<any[]>([])
+  const [selectedCommitSha, setSelectedCommitSha] = useState<string | null>(null)
+  const [selectedCommitFiles, setSelectedCommitFiles] = useState<any[] | null>(null)
+  const [isChartModalOpen, setIsChartModalOpen] = useState(false)
+  const [chartLoading, setChartLoading] = useState(false)
+  const [chartError, setChartError] = useState<string | null>(null)
+  const [activityData, setActivityData] = useState<{ date: string; count: number }[]>([])
 
   useEffect(() => {
     fetchIdeas()
@@ -90,6 +101,147 @@ export default function CompletedProjectsPage() {
     idea.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${idea.user.firstName} ${idea.user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  function ChartIcon() {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 inline mr-1">
+        <path d="M3 3a1 1 0 0 1 1 1v15h16a1 1 0 1 1 0 2H4a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1zm6 10a1 1 0 0 1 1 1v4H8v-4a1 1 0 0 1 1-1zm6-4a1 1 0 0 1 1 1v8h-2V10a1 1 0 0 1 1-1zM9 7a1 1 0 0 1 1-1h2v12h-2V7zm8-4a1 1 0 0 1 1 1v4h-2V4a1 1 0 0 1 1-1z"/>
+      </svg>
+    )
+  }
+
+  const parseRepoFromUrl = (url?: string | null) => {
+    if (!url) return null
+    try {
+      const u = new URL(url)
+      if (u.hostname !== 'github.com') return null
+      const parts = u.pathname.replace(/\.git$/, '').split('/').filter(Boolean)
+      if (parts.length < 2) return null
+      return { owner: parts[0], repo: parts[1] }
+    } catch {
+      return null
+    }
+  }
+
+  const fetchCommits = async (idea: Idea) => {
+    const repo = parseRepoFromUrl(idea.githubUrl)
+    if (!repo) {
+      setGithubError('Invalid GitHub repository URL')
+      return
+    }
+    setGithubLoading(true)
+    setGithubError(null)
+    setCommits([])
+    setSelectedCommitSha(null)
+    setSelectedCommitFiles(null)
+    try {
+      const headers: any = { 'Accept': 'application/vnd.github+json' }
+      const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN
+      if (token) headers['Authorization'] = `Bearer ${token}`
+      const res = await fetch(`https://api.github.com/repos/${repo.owner}/${repo.repo}/commits?per_page=20`, { headers })
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || 'Failed to fetch commits')
+      }
+      const data = await res.json()
+      setCommits(Array.isArray(data) ? data : [])
+    } catch (e: any) {
+      setGithubError(e?.message || 'Failed to fetch commits')
+    } finally {
+      setGithubLoading(false)
+    }
+  }
+
+  const fetchCommitFiles = async (sha: string) => {
+    if (!selectedProject) return
+    const repo = parseRepoFromUrl(selectedProject.githubUrl)
+    if (!repo) return
+    setSelectedCommitSha(sha)
+    setSelectedCommitFiles(null)
+    try {
+      const headers: any = { 'Accept': 'application/vnd.github+json' }
+      const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN
+      if (token) headers['Authorization'] = `Bearer ${token}`
+      const res = await fetch(`https://api.github.com/repos/${repo.owner}/${repo.repo}/commits/${sha}`, { headers })
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || 'Failed to fetch commit details')
+      }
+      const data = await res.json()
+      setSelectedCommitFiles(Array.isArray(data?.files) ? data.files : [])
+    } catch (e) {
+      setSelectedCommitFiles([])
+    }
+  }
+
+  const openGithubModal = async (idea: Idea) => {
+    setSelectedProject(idea)
+    setIsGithubModalOpen(true)
+    await fetchCommits(idea)
+  }
+  const closeGithubModal = () => {
+    setIsGithubModalOpen(false)
+    setCommits([])
+    setGithubError(null)
+    setSelectedCommitSha(null)
+    setSelectedCommitFiles(null)
+  }
+
+  const openChartModal = async (idea: Idea) => {
+    setSelectedProject(idea)
+    setIsChartModalOpen(true)
+    await fetchActivityData(idea)
+  }
+
+  const closeChartModal = () => {
+    setIsChartModalOpen(false)
+    setActivityData([])
+    setChartError(null)
+  }
+
+  const fetchActivityData = async (idea: Idea) => {
+    const repo = parseRepoFromUrl(idea.githubUrl)
+    if (!repo) {
+      setChartError('Invalid GitHub repository URL')
+      return
+    }
+    setChartLoading(true)
+    setChartError(null)
+    try {
+      const headers: any = { 'Accept': 'application/vnd.github+json' }
+      const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN
+      if (token) headers['Authorization'] = `Bearer ${token}`
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      const res = await fetch(`https://api.github.com/repos/${repo.owner}/${repo.repo}/commits?since=${encodeURIComponent(since)}&per_page=100`, { headers })
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || 'Failed to fetch activity')
+      }
+      const data = await res.json()
+      const commitsArr = Array.isArray(data) ? data : []
+      const counts: Record<string, number> = {}
+      for (const c of commitsArr) {
+        const dateStr = c?.commit?.author?.date
+        if (!dateStr) continue
+        const d = new Date(dateStr)
+        const key = d.toISOString().slice(0, 10)
+        counts[key] = (counts[key] || 0) + 1
+      }
+      const days = 14
+      const series: { date: string; count: number }[] = []
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        const key = d.toISOString().slice(0, 10)
+        series.push({ date: key, count: counts[key] || 0 })
+      }
+      setActivityData(series)
+    } catch (e: any) {
+      setChartError(e?.message || 'Failed to load activity')
+    } finally {
+      setChartLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -173,6 +325,22 @@ export default function CompletedProjectsPage() {
                 >
                   <Eye className="h-4 w-4 inline mr-1" /> View
                 </button>
+                {project.githubUrl && (
+                  <button
+                    onClick={() => openGithubModal(project)}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    <Github className="h-4 w-4 inline mr-1" /> GitHub Activity
+                  </button>
+                )}
+                {project.githubUrl && (
+                  <button
+                    onClick={() => openChartModal(project)}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    <ChartIcon /> Activity Chart
+                  </button>
+                )}
               </div>
 
               {(project.githubUrl || project.demoUrl || (project as any).documentationUrl || (project as any).videoUrl) && (
@@ -317,6 +485,146 @@ export default function CompletedProjectsPage() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isGithubModalOpen && selectedProject && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 xl:w-2/3 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">GitHub Activity</h3>
+                  <p className="text-xs text-gray-500 break-all">{selectedProject.githubUrl}</p>
+                </div>
+                <button onClick={closeGithubModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {githubError && (
+                <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-2" /> {githubError}
+                </div>
+              )}
+
+              {githubLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="border border-gray-200 rounded-md">
+                    <div className="px-3 py-2 border-b border-gray-200 text-sm font-medium text-gray-700">Recent Commits</div>
+                    <div className="max-h-96 overflow-y-auto divide-y">
+                      {commits.length === 0 && (
+                        <div className="p-4 text-sm text-gray-500">No commits found.</div>
+                      )}
+                      {commits.map((c) => {
+                        const sha = c?.sha
+                        const msg = c?.commit?.message?.split('\n')[0] || 'No message'
+                        const author = c?.commit?.author?.name || c?.author?.login || 'Unknown'
+                        const date = c?.commit?.author?.date ? new Date(c.commit.author.date).toLocaleString() : ''
+                        return (
+                          <button key={sha} onClick={() => fetchCommitFiles(sha)} className={`w-full text-left p-3 hover:bg-gray-50 ${selectedCommitSha === sha ? 'bg-blue-50' : ''}`}>
+                            <div className="text-sm font-medium text-gray-900 line-clamp-2">{msg}</div>
+                            <div className="text-xs text-gray-600 mt-1">{author} • {date}</div>
+                            <div className="text-xs text-gray-400 mt-1">{sha?.slice(0, 7)}</div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  <div className="border border-gray-200 rounded-md">
+                    <div className="px-3 py-2 border-b border-gray-200 text-sm font-medium text-gray-700">Files Changed {selectedCommitSha ? `(${selectedCommitSha.slice(0,7)})` : ''}</div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {!selectedCommitSha && (
+                        <div className="p-4 text-sm text-gray-500">Select a commit to view changed files.</div>
+                      )}
+                      {selectedCommitSha && selectedCommitFiles === null && (
+                        <div className="p-4 text-sm text-gray-500 flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2"/>Loading files…</div>
+                      )}
+                      {selectedCommitSha && Array.isArray(selectedCommitFiles) && selectedCommitFiles.length === 0 && (
+                        <div className="p-4 text-sm text-gray-500">No file data available for this commit.</div>
+                      )}
+                      {Array.isArray(selectedCommitFiles) && selectedCommitFiles.length > 0 && (
+                        <ul className="divide-y">
+                          {selectedCommitFiles.map((f: any, idx: number) => (
+                            <li key={`${f.filename}-${idx}`} className="p-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-900 break-all">{f.filename}</span>
+                                <span className="text-xs rounded px-1.5 py-0.5 border border-gray-200 text-gray-600">{f.status}</span>
+                              </div>
+                              <div className="mt-1 text-xs text-gray-600">+{f.additions} / -{f.deletions} • {f.changes} changes</div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isChartModalOpen && selectedProject && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 xl:w-2/3 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Commit Activity (Last 14 Days)</h3>
+                  <p className="text-xs text-gray-500 break-all">{selectedProject.githubUrl}</p>
+                </div>
+                <button onClick={closeChartModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {chartError && (
+                <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-2" /> {chartError}
+                </div>
+              )}
+
+              {chartLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                </div>
+              ) : (
+                <div>
+                  {(() => {
+                    const maxCount = Math.max(1, ...activityData.map((d) => d.count || 0))
+                    return (
+                      <div className="grid grid-cols-14 gap-3 items-end border-t border-b border-gray-100 py-6">
+                        {activityData.map((d, idx) => {
+                          const height = Math.round((d.count / maxCount) * 120)
+                          const showTick = idx % 2 === 0
+                          return (
+                            <div key={d.date} className="flex flex-col items-center relative group">
+                              <div
+                                className="w-3 sm:w-4 bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t shadow-sm transition transform hover:-translate-y-1 hover:shadow-md"
+                                style={{ height: `${height}px` }}
+                              />
+                              <div className="absolute -top-5 opacity-0 group-hover:opacity-100 transition text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">
+                                {d.count}
+                              </div>
+                              <div className={`mt-2 text-[10px] text-gray-500 ${showTick ? '' : 'opacity-30'} rotate-[-45deg] origin-top-left whitespace-nowrap`}>
+                                {d.date.slice(5)}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
+                  <div className="mt-3 text-xs text-gray-600">Bars show daily commits (last 14 days). Hover bars to see counts.</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
