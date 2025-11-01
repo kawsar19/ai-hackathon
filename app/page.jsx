@@ -92,10 +92,11 @@ export default function HackathonLanding() {
         if (!res.ok) {
           // Token invalid or user deleted
           clearSessionLocally()
-          // Only navigate away if not already on public routes
+          // Only navigate away if not already on public routes or admin pages
           const pathname = window.location.pathname
           const isPublic = pathname === '/' || pathname === '/login' || pathname === '/register'
-          if (!isPublic) {
+          const isAdminPage = pathname.startsWith('/admin')
+          if (!isPublic && !isAdminPage) {
             window.location.href = '/'
           }
           return
@@ -106,8 +107,12 @@ export default function HackathonLanding() {
           localStorage.setItem('user', JSON.stringify(data.user))
         }
       } catch {
-        // Network or other error → clear locally but don't navigate on home
-        clearSessionLocally()
+        // Network or other error → clear locally but don't navigate on home/admin pages
+        const pathname = window.location.pathname
+        const isAdminPage = pathname.startsWith('/admin')
+        if (!isAdminPage) {
+          clearSessionLocally()
+        }
       }
     }
 
