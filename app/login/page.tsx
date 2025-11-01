@@ -198,20 +198,7 @@ function LoginForm() {
             </div>
           </form>
 
-          {/* Demo Accounts */}
-          <div className="mt-6 border-t border-gray-200 pt-6">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Demo Accounts</h3>
-            <div className="space-y-2 text-xs text-gray-600">
-              <div className="flex justify-between">
-                <span>Admin:</span>
-                <span>admin@qtec.com / admin123</span>
-              </div>
-              <div className="flex justify-between">
-                <span>User:</span>
-                <span>user@qtec.com / user123</span>
-              </div>
-            </div>
-          </div>
+       
         </div>
       </div>
     </div>
