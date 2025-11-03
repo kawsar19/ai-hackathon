@@ -72,7 +72,7 @@ export default function HackathonLanding() {
     const clearSessionLocally = () => {
       // Clear without navigating to avoid reload loops on the home page
       const isProduction = process.env.NODE_ENV === 'production'
-      document.cookie = `token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${isProduction ? 'secure; samesite=strict' : ''}`
+      document.cookie = `token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${isProduction ? 'secure; samesite=lax' : ''}`
       localStorage.removeItem('user')
       localStorage.removeItem('token')
       setUser(null)
@@ -125,7 +125,7 @@ export default function HackathonLanding() {
   const handleLogout = () => {
     // Clear token cookie
     const isProduction = process.env.NODE_ENV === 'production'
-    document.cookie = `token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${isProduction ? 'secure; samesite=strict' : ''}`
+    document.cookie = `token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${isProduction ? 'secure; samesite=lax' : ''}`
     
     // Clear localStorage
     localStorage.removeItem('user')

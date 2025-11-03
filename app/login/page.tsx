@@ -52,7 +52,7 @@ function LoginForm() {
       if (response.ok) {
         // Store token in cookies
         const isProduction = process.env.NODE_ENV === 'production'
-        document.cookie = `token=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}; ${isProduction ? 'secure; samesite=strict' : ''}`
+        document.cookie = `token=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}; ${isProduction ? 'secure; samesite=lax' : ''}`
         localStorage.setItem('user', JSON.stringify(data.user))
         
         setSuccess("Login successful!")
