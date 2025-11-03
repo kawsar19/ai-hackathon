@@ -1,28 +1,52 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// Bot detection function
+function isBot(userAgent: string | null): boolean {
+  if (!userAgent) return false
+  const botPatterns = [
+    'whatsapp',
+    'facebookexternalhit',
+    'twitterbot',
+    'linkedinbot',
+    'slackbot',
+    'telegrambot',
+    'googlebot',
+    'bingbot',
+    'duckduckbot',
+    'baiduspider',
+    'yandexbot',
+    'applebot',
+    'facebot',
+  ]
+  return botPatterns.some(bot => userAgent.toLowerCase().includes(bot))
+}
+
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '')
-
   const { pathname } = request.nextUrl
+  const userAgent = request.headers.get('user-agent')
 
-  // Public routes that don't require authentication
+  // Skip middleware for bots (WhatsApp, Facebook, etc.)
+  if (isBot(userAgent)) {
+    return NextResponse.next()
+  }
+
+  // Extract token from cookies or Authorization header
+  const token =
+    request.cookies.get('token')?.value ||
+    request.headers.get('authorization')?.replace('Bearer ', '')
+
+  // Public routes (no auth needed)
   const publicRoutes = ['/', '/login', '/register', '/forgot-password']
-  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/reset-password/')
-
-  // Admin routes
-  const isAdminRoute = pathname.startsWith('/admin')
-  
-  // User dashboard routes
-  const isUserRoute = pathname.startsWith('/dashboard')
+  const isPublicRoute =
+    publicRoutes.includes(pathname) || pathname.startsWith('/reset-password/')
 
   // If it's a public route, allow access
   if (isPublicRoute) {
     return NextResponse.next()
   }
 
-  // If no token and trying to access protected routes, redirect to login
+  // If no token, redirect to login with redirect param
   if (!token) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', pathname)
@@ -30,47 +54,47 @@ export function middleware(request: NextRequest) {
   }
 
   try {
-    // Decode JWT token to get user info
+    // Decode JWT payload
     const payload = JSON.parse(atob(token.split('.')[1]))
     const userRole = payload.role
     const currentTime = Math.floor(Date.now() / 1000)
 
-    // Check if token is expired
+    // Check token expiration
     if (payload.exp && payload.exp < currentTime) {
       const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
     }
 
-    // Check role-based access
+    // Role-based route protection
+    const isAdminRoute = pathname.startsWith('/admin')
+    const isUserRoute = pathname.startsWith('/dashboard')
+
     if (isAdminRoute && userRole !== 'ADMIN') {
-      // Redirect non-admin users trying to access admin routes
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
     if (isUserRoute && userRole !== 'USER') {
-      // Only regular users can access /dashboard; redirect admins to admin dashboard
       return NextResponse.redirect(new URL('/admin/dashboard', request.url))
     }
 
-    // Allow access
+    // All checks passed → allow access
     return NextResponse.next()
-
   } catch (error) {
-    // Invalid token, redirect to login
+    // Invalid token → redirect to login
     const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)
   }
 }
 
+// Only run middleware on protected routes
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/dashboard/:path*',
+    '/admin/:path*',
+    // Add other protected routes if needed, e.g.:
+    // '/submit-idea',
+    // '/profile',
   ],
 }
