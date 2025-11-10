@@ -12,6 +12,7 @@ import {
   UserPlus,
   AlertCircle,
   CheckCircle,
+  MessageSquare,
 } from "lucide-react"
 
 function LoginForm() {
@@ -74,7 +75,27 @@ function LoginForm() {
       setIsLoading(false)
     }
   }
+       // Client-only example inside your component
+       const obfuscated = "MDE3NjI3NzIwMDg=" // base64 of "01762772008"
 
+     
+       function handleOpen() {
+         try {
+           const raw = atob(obfuscated)
+           const phone = "+8801762772008"
+           if (!phone) {
+             alert('Invalid phone number')
+             return
+           }
+           const msg = encodeURIComponent('Hello, I forgot my password. Please help me reset.')
+           const url = `https://wa.me/${phone}?text=${msg}`
+           window.open(url, '_blank', 'noopener,noreferrer')
+         } catch (e) {
+           console.error(e)
+           alert('Unable to open WhatsApp')
+         }
+       }
+     
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -197,6 +218,17 @@ function LoginForm() {
               </button>
             </div>
           </form>
+   
+
+
+<button
+  type="button"
+  onClick={handleOpen}
+  className="inline-flex items-center  text-blue-600 hover:text-blue-500 font-medium mt-4 cursor-pointer"
+>
+  <MessageSquare className="h-4 w-4 mr-2" />
+  Forgot password? Contact on WhatsApp
+</button>
 
        
         </div>
