@@ -660,6 +660,9 @@ export default function SubmitIdeaPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="What resources do you need?"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Note: No paid resources will be provided.
+                </p>
               </div>
             </div>
 
