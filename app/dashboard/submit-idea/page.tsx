@@ -94,7 +94,11 @@ const techStackOptions = {
     "Apollo Client",
     "Webpack",
     "Vite",
-    "Parcel"
+    "Parcel",
+    "streamlit",
+    "shadcn/ui",
+    "others"
+  
   ],
   "Backend": [
     "Node.js",

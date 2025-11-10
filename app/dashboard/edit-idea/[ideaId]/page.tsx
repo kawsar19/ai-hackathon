@@ -96,6 +96,9 @@ const techStackOptions: Record<string, string[]> = {
     "Webpack",
     "Vite",
     "Parcel",
+    "streamlit",
+    "shadcn/ui",
+    "others"
   ],
   "Backend": [
     "Node.js",
