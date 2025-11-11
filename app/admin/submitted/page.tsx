@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   Search,
   Eye,
@@ -47,6 +47,26 @@ export default function SubmittedIdeasPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [selectedSubmitter, setSelectedSubmitter] = useState<string>("all")
+
+  const submitterOptions = useMemo(() => {
+    const map = new Map<string, { name: string; count: number }>()
+    ideas.forEach((idea) => {
+      const name = `${idea.user.firstName} ${idea.user.lastName}`.trim() || idea.user.email || 'Unknown'
+      const entry = map.get(idea.user.id)
+      if (entry) {
+        entry.count += 1
+      } else {
+        map.set(idea.user.id, { name, count: 1 })
+      }
+    })
+    return Array.from(map.entries())
+      .map(([id, info]) => ({ id, ...info }))
+      .sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count
+        return a.name.localeCompare(b.name)
+      })
+  }, [ideas])
 
   const [selectedProject, setSelectedProject] = useState<Idea | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
@@ -107,11 +127,13 @@ export default function SubmittedIdeasPage() {
     }
   }
 
-  const filtered = ideas.filter(idea =>
-    idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    idea.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${idea.user.firstName} ${idea.user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filtered = ideas
+    .filter(idea =>
+      idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      idea.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${idea.user.firstName} ${idea.user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(idea => selectedSubmitter === 'all' || idea.user.id === selectedSubmitter)
 
   
 
@@ -147,8 +169,8 @@ export default function SubmittedIdeasPage() {
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end">
+          <div className="relative md:flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
@@ -157,6 +179,21 @@ export default function SubmittedIdeasPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+          <div className="md:w-72">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by submitter</label>
+            <select
+              value={selectedSubmitter}
+              onChange={(e) => setSelectedSubmitter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="all">All submitters ({ideas.length})</option>
+              {submitterOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name} ({option.count})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
