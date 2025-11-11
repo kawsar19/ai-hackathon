@@ -428,30 +428,30 @@ export default function SubmitIdeaPage() {
       </div>
     )
   }
-  return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="h-8 w-8 text-red-600" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Idea Submission Closed
-        </h2>
-        <p className="text-gray-600 mb-6">
-          The deadline for idea submission was <strong>10 November 2025</strong>.
-          You can no longer submit new ideas.
-        </p>
-        <div className="flex justify-center">
-          <button
-            onClick={() => (window.location.href = "/dashboard")}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Go to Dashboard
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  // return (
+  //   <div className="max-w-2xl mx-auto">
+  //     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+  //       <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+  //         <AlertCircle className="h-8 w-8 text-red-600" />
+  //       </div>
+  //       <h2 className="text-2xl font-bold text-gray-900 mb-2">
+  //         Idea Submission Closed
+  //       </h2>
+  //       <p className="text-gray-600 mb-6">
+  //         The deadline for idea submission was <strong>10 November 2025</strong>.
+  //         You can no longer submit new ideas.
+  //       </p>
+  //       <div className="flex justify-center">
+  //         <button
+  //           onClick={() => (window.location.href = "/dashboard")}
+  //           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+  //         >
+  //           Go to Dashboard
+  //         </button>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   return (
     <div className="max-w-4xl mx-auto">
