@@ -77,7 +77,13 @@ export default function CompletedProjectsPage() {
       if (!response.ok) throw new Error('Failed to fetch ideas')
       const data = await response.json()
       const completedOnly: Idea[] = (data.ideas || []).filter((i: Idea) => String(i.status).toUpperCase() === 'COMPLETED')
-      setIdeas(completedOnly)
+      // Ensure all fields are properly mapped
+      const mappedIdeas = completedOnly.map((idea: any) => ({
+        ...idea,
+        documentationUrl: idea.documentationUrl || null,
+        videoUrl: idea.videoUrl || null,
+      }))
+      setIdeas(mappedIdeas)
     } catch (e) {
       console.error(e)
       setError(e instanceof Error ? e.message : 'An error occurred')
@@ -343,7 +349,7 @@ export default function CompletedProjectsPage() {
                 )}
               </div>
 
-              {(project.githubUrl || project.demoUrl || (project as any).documentationUrl || (project as any).videoUrl) && (
+              {(project.githubUrl || project.demoUrl || project.documentationUrl || project.videoUrl) && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {project.githubUrl && (
                     <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2.5 py-1.5 text-xs bg-gray-800 text-white rounded hover:bg-gray-900">
@@ -355,13 +361,13 @@ export default function CompletedProjectsPage() {
                       <Globe className="h-3 w-3 mr-1.5" /> Live Demo
                     </a>
                   )}
-                  {(project as any).documentationUrl && (
-                    <a href={(project as any).documentationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2.5 py-1.5 text-xs bg-purple-600 text-white rounded hover:bg-purple-700">
+                  {project.documentationUrl && (
+                    <a href={project.documentationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2.5 py-1.5 text-xs bg-purple-600 text-white rounded hover:bg-purple-700">
                       <FileText className="h-3 w-3 mr-1.5" /> Docs
                     </a>
                   )}
-                  {(project as any).videoUrl && (
-                    <a href={(project as any).videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2.5 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700">
+                  {project.videoUrl && (
+                    <a href={project.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2.5 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700">
                       <PlayCircle className="h-3 w-3 mr-1.5" /> Video
                     </a>
                   )}
@@ -427,7 +433,7 @@ export default function CompletedProjectsPage() {
                       <div className="flex justify-between"><span className="text-gray-600">Progress:</span><span className="font-medium text-gray-900">{selectedProject.progress}%</span></div>
                     </div>
                   </div>
-                  {(selectedProject.githubUrl || selectedProject.demoUrl || (selectedProject as any).documentationUrl || (selectedProject as any).videoUrl) && (
+                  {(selectedProject.githubUrl || selectedProject.demoUrl || selectedProject.documentationUrl || selectedProject.videoUrl) && (
                     <div className="bg-gray-50 rounded-lg p-6">
                       <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                         <ExternalLink className="h-5 w-5 mr-2 text-gray-600" /> Project Links
@@ -443,13 +449,13 @@ export default function CompletedProjectsPage() {
                             <Globe className="h-4 w-4 mr-2" /> Live Demo
                           </a>
                         )}
-                        {(selectedProject as any).documentationUrl && (
-                          <a href={(selectedProject as any).documentationUrl} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                        {selectedProject.documentationUrl && (
+                          <a href={selectedProject.documentationUrl} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
                             <FileText className="h-4 w-4 mr-2" /> Documentation
                           </a>
                         )}
-                        {(selectedProject as any).videoUrl && (
-                          <a href={(selectedProject as any).videoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        {selectedProject.videoUrl && (
+                          <a href={selectedProject.videoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
                             <PlayCircle className="h-4 w-4 mr-2" /> Video
                           </a>
                         )}
