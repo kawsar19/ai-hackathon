@@ -18,6 +18,9 @@ import {
   TrendingUp,
   Activity,
   Loader2,
+  Info,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react"
 
 interface Idea {
@@ -151,6 +154,82 @@ export default function UserDashboard() {
           <div className="text-right">
             <p className="text-sm text-gray-500">Total Ideas</p>
             <p className="text-2xl font-bold text-blue-600">{ideas.length}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* How to Submit Project Instructions */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-lg shadow-md p-6">
+        <div className="flex items-start space-x-4">
+          <div className="flex-shrink-0">
+            <div className="bg-green-600 rounded-full p-3">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+              <Info className="h-5 w-5 text-green-600 mr-2" />
+              How to Submit Your Project
+            </h3>
+            <div className="space-y-3 text-gray-700">
+              <div className="flex items-start space-x-3">
+                <span className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  1
+                </span>
+                <p className="pt-0.5">
+                  Go to the <strong className="text-gray-900">My Ideas</strong> page by clicking 
+                  <a href="/dashboard/my-ideas" className="mx-1 text-green-600 hover:text-green-700 font-semibold underline inline-flex items-center">
+                    here <ArrowRight className="h-3 w-3 ml-1" />
+                  </a>
+                  or navigate to <code className="px-1.5 py-0.5 bg-gray-100 rounded text-sm">/dashboard/my-ideas</code>
+                </p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  2
+                </span>
+                <p className="pt-0.5">
+                  Find your project with <strong className="text-gray-900">IN_PROGRESS</strong> status and click on the 
+                  <span className="mx-1 px-2 py-1 bg-green-600 text-white rounded-md text-sm font-medium inline-flex items-center">
+                    <Sparkles className="h-3 w-3 mr-1 animate-pulse" />
+                    Submit Project
+                  </span>
+                  glowing button
+                </p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  3
+                </span>
+                <p className="pt-0.5">
+                  Fill out the modal with required information:
+                  <ul className="mt-2 ml-4 space-y-1 list-disc text-sm">
+                    <li>GitHub Repository URL <span className="text-red-500">*</span></li>
+                    <li>Live Demo URL <span className="text-red-500">*</span></li>
+                    <li>Documentation URL <span className="text-red-500">*</span> (must include project summary, AI tools used, prompts, etc.)</li>
+                    <li>Video URL (optional)</li>
+                    <li>Progress percentage</li>
+                  </ul>
+                </p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  4
+                </span>
+                <p className="pt-0.5">
+                  Click <strong className="text-gray-900">Submit Project</strong> button. Your project will automatically be marked as <strong className="text-purple-600">COMPLETED</strong>!
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-green-200">
+              <a
+                href="/dashboard/my-ideas"
+                className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium shadow-lg shadow-green-500/50 hover:shadow-green-500/75"
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Go to My Ideas Page
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -176,7 +176,7 @@ export default function MyIdeasPage() {
       // Client-side validation
       const allowedStatuses = ['IN_PROGRESS', 'COMPLETED']
       const isValidUrl = (value: string) => {
-        if (!value) return true
+        if (!value || value.trim() === '') return false
         try {
           const u = new URL(value)
           return u.protocol === 'http:' || u.protocol === 'https:'
@@ -185,25 +185,38 @@ export default function MyIdeasPage() {
         }
       }
 
-      if (!allowedStatuses.includes(projectData.status)) {
-        throw new Error('Status must be IN_PROGRESS or COMPLETED')
-      }
-      if (Number.isNaN(projectData.progress) || projectData.progress < 0 || projectData.progress > 100) {
-        throw new Error('Progress must be a number between 0 and 100')
+      // Required field validations
+      if (!projectData.githubUrl || projectData.githubUrl.trim() === '') {
+        throw new Error('GitHub Repository URL is required')
       }
       if (!isValidUrl(projectData.githubUrl)) {
-        throw new Error('GitHub URL is invalid')
+        throw new Error('GitHub Repository URL is invalid')
+      }
+
+      if (!projectData.demoUrl || projectData.demoUrl.trim() === '') {
+        throw new Error('Live Demo URL is required')
       }
       if (!isValidUrl(projectData.demoUrl)) {
         throw new Error('Live Demo URL is invalid')
       }
-      if (!isValidUrl((projectData as any).documentationUrl)) {
+
+      if (!projectData.documentationUrl || projectData.documentationUrl.trim() === '') {
+        throw new Error('Documentation URL is required')
+      }
+      if (!isValidUrl(projectData.documentationUrl)) {
         throw new Error('Documentation URL is invalid')
       }
-      if (!isValidUrl((projectData as any).videoUrl)) {
+
+      if (Number.isNaN(projectData.progress) || projectData.progress < 0 || projectData.progress > 100) {
+        throw new Error('Progress must be a number between 0 and 100')
+      }
+      
+      // Video URL is optional but must be valid if provided
+      if (projectData.videoUrl && projectData.videoUrl.trim() !== '' && !isValidUrl(projectData.videoUrl)) {
         throw new Error('Video URL is invalid')
       }
 
+      // Automatically set status to COMPLETED when submitting
       const response = await fetch(`/api/ideas/${editingProjectId}`, {
         method: 'PATCH',
         headers: {
@@ -215,7 +228,7 @@ export default function MyIdeasPage() {
           documentationUrl: projectData.documentationUrl,
           videoUrl: projectData.videoUrl,
           progress: projectData.progress,
-          status: projectData.status,
+          status: 'COMPLETED', // Automatically set to COMPLETED when submitting
         }),
       })
 
@@ -234,7 +247,7 @@ export default function MyIdeasPage() {
               documentationUrl: projectData.documentationUrl,
               videoUrl: projectData.videoUrl,
               progress: projectData.progress,
-              status: projectData.status,
+              status: 'COMPLETED', // Status automatically set to COMPLETED
             }
           : idea
       ))
@@ -360,7 +373,7 @@ export default function MyIdeasPage() {
           <h1 className="text-2xl font-bold text-gray-900">My Ideas</h1>
           <p className="text-gray-600 mt-1">Manage and track your submitted project ideas</p>
         </div>
-        {ideas.length < 2 && (
+        {/* {ideas.length < 2 && (
           <button 
             onClick={() => window.location.href = '/dashboard/submit-idea'}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2"
@@ -368,7 +381,7 @@ export default function MyIdeasPage() {
             <Plus className="h-4 w-4" />
             <span>Submit New Idea</span>
           </button>
-        )}
+        )} */}
       </div>
 
       
@@ -521,17 +534,14 @@ export default function MyIdeasPage() {
                 <div className="flex items-center space-x-2 ml-4">
                   {idea.status === "IN_PROGRESS" && (
                     <>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button 
-                            onClick={() => openProjectUpdate(idea)}
-                            className="p-2 text-gray-400 hover:text-green-600"
-                          >
-                            <Save className="h-4 w-4" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>Update Project</TooltipContent>
-                      </Tooltip>
+                      <button 
+                        onClick={() => openProjectUpdate(idea)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 relative animate-pulse hover:animate-none transition-all duration-300 shadow-lg shadow-green-500/50 hover:shadow-green-500/75 hover:scale-105 flex items-center space-x-2 font-medium"
+                      >
+                        <Save className="h-4 w-4" />
+                        <span>Submit Project</span>
+                        <span className="absolute inset-0 rounded-md bg-green-500 opacity-20 animate-ping"></span>
+                      </button>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button 
@@ -626,7 +636,7 @@ export default function MyIdeasPage() {
             <div className="mt-3">
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Update Project Details</h3>
+                <h3 className="text-lg font-medium text-gray-900">Submit Project</h3>
                 <button
                   onClick={closeProjectUpdate}
                   className="text-gray-400 hover:text-gray-600"
@@ -640,7 +650,7 @@ export default function MyIdeasPage() {
                 <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center">
                     <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                    <p className="text-green-800">Project updated successfully!</p>
+                    <p className="text-green-800">Project submitted successfully!</p>
                   </div>
                 </div>
               )}
@@ -656,15 +666,35 @@ export default function MyIdeasPage() {
               )}
 
               {/* Update Form */}
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md space-y-3">
+                <div>
+                  <p className="text-sm text-blue-800 font-medium mb-2">
+                    Required fields: GitHub Repository URL, Live Demo URL, and Documentation URL must be provided to submit your project.
+                  </p>
+                </div>
+                <div className="border-t border-blue-200 pt-3">
+                  <p className="text-sm text-blue-900 font-medium mb-2">
+                    Documentation Requirements:
+                  </p>
+                  <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                    <li>Project summary</li>
+                    <li>List all AI tools used in the hackathon project</li>
+                    <li>Explain how prompts were used and structured</li>
+                    <li>Include prompt summaries and examples</li>
+                    <li>Document the AI integration approach and methodology</li>
+                  </ul>
+                </div>
+              </div>
               <div className="space-y-4">
                 {/* GitHub URL */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Github className="h-4 w-4 inline mr-1" />
-                    GitHub Repository URL
+                    GitHub Repository URL <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="url"
+                    required
                     value={projectData.githubUrl}
                     onChange={(e) => setProjectData({...projectData, githubUrl: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -676,10 +706,11 @@ export default function MyIdeasPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Globe className="h-4 w-4 inline mr-1" />
-                    Live Demo URL
+                    Live Demo URL <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="url"
+                    required
                     value={projectData.demoUrl}
                     onChange={(e) => setProjectData({...projectData, demoUrl: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -687,14 +718,15 @@ export default function MyIdeasPage() {
                   />
                 </div>
 
-                {/* Documentation URL (optional) */}
+                {/* Documentation URL */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <FileText className="h-4 w-4 inline mr-1" />
-                    Documentation URL (optional)
+                    Documentation URL <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="url"
+                    required
                     value={projectData.documentationUrl}
                     onChange={(e) => setProjectData({...projectData, documentationUrl: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -749,17 +781,17 @@ export default function MyIdeasPage() {
                   <button
                     onClick={handleProjectUpdate}
                     disabled={isUpdatingProject}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-medium shadow-lg shadow-green-500/50 hover:shadow-green-500/75"
                   >
                     {isUpdatingProject ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Updating...</span>
+                        <span>Submitting...</span>
                       </>
                     ) : (
                       <>
                         <Save className="h-4 w-4" />
-                        <span>Update Project</span>
+                        <span>Submit Project</span>
                       </>
                     )}
                   </button>
